@@ -21,81 +21,92 @@ function getDueDateForBillingPeriod(billingPeriod: string | null | undefined, bi
 	return getMonthlyDueDate(year, monthIndex, billingDay);
 }
 
+function getFallbackPlanPrice(plan: string): number {
+	const normalized = plan.toLowerCase();
+	if (normalized.includes('300')) return 1499;
+	if (normalized.includes('200')) return 1299;
+	if (normalized.includes('100')) return 999;
+	if (normalized.includes('50')) return 799;
+	if (normalized.includes('25')) return 599;
+	return 999;
+}
+
 const cutoffDay = 9;
 
 export async function GET(request: Request) {
 	const access = await requireRole(['admin', 'subscriber']);
 	if (access.response) return access.response;
+
 	const status = new URL(request.url).searchParams.get('status');
 	const isSubscriber = access.session?.user?.role === 'subscriber';
-	const subscriberId = isSubscriber ? access.session.user.subscriberId : new URL(request.url).searchParams.get('subscriberId');
+	let subscriberId = isSubscriber ? access.session?.user?.subscriberId : new URL(request.url).searchParams.get('subscriberId');
+
+	// If subscriberId wasn't stored on the session token, resolve it by email
+	if (isSubscriber && !subscriberId && access.session?.user?.email) {
+		const matchedSub = await prisma.subscriber.findFirst({
+			where: { email: { equals: access.session.user.email, mode: 'insensitive' } },
+			select: { id: true },
+		});
+		if (matchedSub) {
+			subscriberId = matchedSub.id;
+		}
+	}
+
 	const systemSettings = await prisma.systemSettings.findUnique({ where: { id: 'singleton' } });
 	const billingDay = Number(systemSettings?.billingDay ?? 30);
 	const plans = Array.isArray(systemSettings?.plans) ? systemSettings.plans as Array<{ name?: string; price?: number }> : [];
-	const currentDate = new Date();
-	const currentBillingPeriod = currentDate.getDate() >= cutoffDay
-		? `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`
-		: null;
 
-	if (!isSubscriber && currentBillingPeriod) {
-		const activeSubscribers = await prisma.subscriber.findMany({ where: { status: 'Active', archived: false }, select: { id: true, plan: true } });
-		await prisma.$transaction(async (transaction) => {
-			for (const subscriber of activeSubscribers) {
-				const existingBill = await transaction.bill.findFirst({
-					where: { subscriberId: subscriber.id, billingPeriod: currentBillingPeriod },
-					select: { id: true },
-				});
-				if (existingBill) continue;
-				const planName = subscriber.plan.replace(/_/g, ' ');
-				const plan = plans.find((item) => item.name?.replace(/\s+/g, '').toLowerCase() === planName.replace(/\s+/g, '').toLowerCase());
-				if (plan?.price === undefined) continue;
-				await transaction.bill.create({
-					data: {
-						id: `BILL-${subscriber.id}-${currentBillingPeriod}`,
-						subscriberId: subscriber.id,
-						plan: subscriber.plan,
-						billingPeriod: currentBillingPeriod,
-						amount: Number(plan.price),
-						dueDate: getMonthlyDueDate(currentDate.getFullYear(), currentDate.getMonth(), billingDay),
-						status: 'Unpaid',
-					},
-				});
-			}
-		});
+	const currentDate = new Date();
+	const currentBillingPeriod = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+
+	// Fetch existing bills
+	const isPendingFilter = status === 'Pending' || status === 'Pending_Confirmation';
+	let bills = await prisma.bill.findMany({
+		where: {
+			...(subscriberId ? { subscriberId } : {}),
+			...(isPendingFilter
+				? { paymentStatus: 'Pending_Confirmation' }
+				: status && status !== 'All' && ['Paid', 'Unpaid', 'Overdue'].includes(status)
+					? { status: status as 'Paid' | 'Unpaid' | 'Overdue' }
+					: {}),
+		},
+		orderBy: { dueDate: 'desc' },
+		include: { subscriber: { select: { name: true, plan: true } } },
+	});
+
+	// If a subscriber has no bills yet in the database, automatically initialize one for their plan
+	if (isSubscriber && subscriberId && bills.length === 0) {
+		const sub = await prisma.subscriber.findUnique({ where: { id: subscriberId } });
+		if (sub) {
+			const planClean = sub.plan.replace(/_/g, ' ');
+			const matchedPlan = plans.find((p) => p.name?.replace(/\s+/g, '').toLowerCase() === planClean.replace(/\s+/g, '').toLowerCase());
+			const amount = matchedPlan?.price != null ? Number(matchedPlan.price) : getFallbackPlanPrice(sub.plan);
+
+			const newBill = await prisma.bill.create({
+				data: {
+					id: `BILL-${sub.id}-${currentBillingPeriod}`,
+					subscriberId: sub.id,
+					plan: sub.plan,
+					billingPeriod: currentBillingPeriod,
+					amount,
+					dueDate: getMonthlyDueDate(currentDate.getFullYear(), currentDate.getMonth(), billingDay),
+					status: 'Unpaid',
+				},
+				include: { subscriber: { select: { name: true, plan: true } } },
+			});
+			bills = [newBill];
+		}
 	}
 
-	const bills = await prisma.bill.findMany({ where: { ...(subscriberId ? { subscriberId } : {}), ...(status && status !== 'All' ? { status: status as 'Paid' | 'Unpaid' | 'Overdue' } : {}) }, orderBy: { dueDate: 'desc' }, include: { subscriber: { select: { name: true } } } });
 	const normalizedBills = bills.map((bill) => ({
 		...bill,
 		dueDate: getDueDateForBillingPeriod(bill.billingPeriod, billingDay) ?? bill.dueDate,
 	}));
-	if (!isSubscriber || !subscriberId) return NextResponse.json({ data: normalizedBills, billingDay, cutoffDay, error: null });
 
-	const [subscriber] = await Promise.all([
-		prisma.subscriber.findUnique({ where: { id: subscriberId } }),
-	]);
-	const planName = subscriber?.plan.replace(/_/g, ' ') || '';
-	const currentPlan = plans.find((plan) => plan.name?.replace(/\s+/g, '').toLowerCase() === planName.replace(/\s+/g, '').toLowerCase());
-	const currentPrice = currentPlan?.price;
-	let currentBills = normalizedBills;
-	const hasCurrentBill = currentBillingPeriod
-		? currentBills.some((bill) => bill.billingPeriod === currentBillingPeriod)
-		: true;
-	if (!hasCurrentBill && subscriber && currentPrice !== undefined && currentBillingPeriod) {
-		const createdBill = await prisma.bill.create({
-			data: {
-				id: `BILL-${subscriber.id}-${Date.now()}`,
-				subscriberId: subscriber.id,
-				plan: subscriber.plan,
-				billingPeriod: currentBillingPeriod,
-				amount: Number(currentPrice),
-				dueDate: getMonthlyDueDate(currentDate.getFullYear(), currentDate.getMonth(), billingDay),
-				status: 'Unpaid',
-			},
-		});
-		currentBills = [{ ...createdBill, subscriber: { name: subscriber.name } }];
-	} else if (currentPrice !== undefined) {
-		currentBills = currentBills.map((bill) => ({ ...bill, amount: Number(currentPrice) }));
-	}
-	return NextResponse.json({ data: currentBills, billingDay, cutoffDay, error: null });
+	return NextResponse.json({
+		data: normalizedBills,
+		billingDay,
+		cutoffDay,
+		error: null,
+	});
 }

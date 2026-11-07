@@ -1,97 +1,1093 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import {
+  Wifi,
+  Zap,
+  Users,
+  Coins,
+  ShieldCheck,
+  Smartphone,
+  Check,
+  MapPin,
+  ArrowRight,
+  Phone,
+  Mail,
+  Menu,
+  X,
+  Search,
+  CheckCircle,
+  AlertCircle,
+  ExternalLink,
+} from 'lucide-react';
+import { BookingModal } from './BookingModal';
 
 type Props = {
   onLogin: () => void;
   onBook: () => void;
 };
 
-function Icon({ name, size = 22 }: { name: 'wifi' | 'support' | 'shield' | 'portal' | 'check' | 'arrow' | 'pin'; size?: number }) {
-  const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true };
-  if (name === 'wifi') return <svg {...common}><path d="M2.5 8.5a15.5 15.5 0 0 1 19 0" /><path d="M5.5 12a10.7 10.7 0 0 1 13 0" /><path d="M8.8 15.5a5.8 5.8 0 0 1 6.4 0" /><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none" /></svg>;
-  if (name === 'support') return <svg {...common}><path d="M4 13v-1a8 8 0 0 1 16 0v1" /><path d="M4 13h2v5H4a2 2 0 0 1-2-2v-1a2 2 0 0 1 2-2Z" /><path d="M20 13h-2v5h2a2 2 0 0 0 2-2v-1a2 2 0 0 0-2-2Z" /><path d="M18 18c-.6 2-2.6 3-5 3h-1" /></svg>;
-  if (name === 'shield') return <svg {...common}><path d="M12 3 20 6v5c0 5-3.4 8.2-8 10-4.6-1.8-8-5-8-10V6l8-3Z" /><path d="m8.5 12 2.3 2.3 4.8-4.8" /></svg>;
-  if (name === 'portal') return <svg {...common}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M7 8h.01M11 8h.01M7 12h10M7 16h6" /></svg>;
-  if (name === 'pin') return <svg {...common}><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></svg>;
-  if (name === 'check') return <svg {...common}><path d="m5 12 4 4L19 6" /></svg>;
-  return <svg {...common}><path d="M5 12h13M13 6l6 6-6 6" /></svg>;
-}
-
-const benefits = [
-  ['wifi', 'Pure fiber to your home', 'A direct fiber connection delivers consistent speed for every room and every device.'],
-  ['support', 'Local support, 24/7', 'Talk to a real local team whenever you need a hand with your connection.'],
-  ['shield', 'One simple monthly price', 'Clear plans, unlimited data, and no confusing surprises on your bill.'],
-  ['portal', 'Everything in one portal', 'Manage your service, requests, payments, and updates in one secure place.'],
-] as const;
-
-type Plan = { name: string; speedMbps: number; price: number };
-
-const fallbackPlans: Plan[] = [
-  { name: 'Fiber 25Mbps', speedMbps: 25, price: 599 },
-  { name: 'Fiber 50Mbps', speedMbps: 50, price: 799 },
-  { name: 'Fiber 100Mbps', speedMbps: 100, price: 999 },
+// Key barangays in Sibagat with coverage status
+const SIBAGAT_ZONES = [
+  { name: 'Poblacion', status: 'Active', coverage: '100% Pure Fiber', speed: 'Up to 300 Mbps', note: 'Central Network Hub' },
+  { name: 'Mahayahay', status: 'Active', coverage: '100% Pure Fiber', speed: 'Up to 300 Mbps', note: 'High Density Residential' },
+  { name: 'San Vicente', status: 'Active', coverage: '100% Pure Fiber', speed: 'Up to 200 Mbps', note: 'Fast Track Installation' },
+  { name: 'El Rio', status: 'Active', coverage: '100% Pure Fiber', speed: 'Up to 200 Mbps', note: 'Pure Optical Lines' },
+  { name: 'Afga', status: 'Active', coverage: '98% Fiber Ready', speed: 'Up to 200 Mbps', note: 'Highway Commercial & Home' },
+  { name: 'Tabon-tabon', status: 'Active', coverage: '95% Fiber Ready', speed: 'Up to 100 Mbps', note: 'Direct Fiber Feed' },
+  { name: 'Ilihan', status: 'Active', coverage: '95% Fiber Ready', speed: 'Up to 100 Mbps', note: 'Active Distribution Box' },
+  { name: 'Sinai', status: 'Active', coverage: '92% Fiber Ready', speed: 'Up to 100 Mbps', note: 'Fast Fiber Access' },
+  { name: 'Perez', status: 'Expanding', coverage: 'Expanding Q1', speed: 'Pre-booking Ready', note: 'Line Deployment Underway' },
+  { name: 'Kauswagan', status: 'Expanding', coverage: 'Expanding Q1', speed: 'Pre-booking Ready', note: 'Line Deployment Underway' },
 ];
 
-export function LandingPage({ onLogin, onBook }: Props) {
-  const [plans, setPlans] = useState<Plan[]>(fallbackPlans);
+export function LandingPage({ onLogin }: Props) {
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<string>('Fiber_50Mbps');
+  const [prefilledAddress, setPrefilledAddress] = useState<string>('');
+  const [prefilledBarangay, setPrefilledBarangay] = useState<string>('Poblacion');
+  
+  const [heroAddress, setHeroAddress] = useState<string>('');
+  const [coverageAddress, setCoverageAddress] = useState<string>('');
+  const [coverageResult, setCoverageResult] = useState<{
+    tested: boolean;
+    available: boolean;
+    barangayName: string;
+    message: string;
+  } | null>(null);
+
+  const [activeZone, setActiveZone] = useState<typeof SIBAGAT_ZONES[0]>(SIBAGAT_ZONES[0]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    fetch('/api/settings')
-      .then(async (response) => {
-        if (!response.ok) throw new Error('Unable to load plans.');
-        const result = await response.json();
-        if (Array.isArray(result.data?.plans) && result.data.plans.length) {
-          const currentPlans = result.data.plans
-            .map((plan: { name?: string; speedMbps?: number; price?: number }) => ({
-              name: plan.name || '',
-              speedMbps: Number(plan.speedMbps || 0),
-              price: Number(plan.price || 0),
-            }))
-            .filter((plan: Plan) => plan.name && plan.speedMbps > 0 && plan.price >= 0);
-          if (currentPlans.length) setPlans(currentPlans);
-        }
-      })
-      .catch(() => undefined);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const popularPlan = plans.find((plan) => plan.speedMbps === 50) || plans[Math.floor(plans.length / 2)];
+  // Opens the application modal for a plan
+  const openPlanModal = (planName: string) => {
+    setSelectedPlan(planName);
+    setIsModalOpen(true);
+  };
+
+  // Scrolls smoothly to the coverage & map section
+  const scrollToCoverage = () => {
+    const el = document.getElementById('check-coverage');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // When user checks address in Hero, scroll to coverage and run the check
+  const handleHeroCheckAddress = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    scrollToCoverage();
+    if (heroAddress.trim()) {
+      runCoverageCheck(heroAddress);
+    }
+  };
+
+  // Coverage search algorithm for Sibagat
+  const runCoverageCheck = (query: string) => {
+    const cleanQuery = query.toLowerCase().trim();
+    if (!cleanQuery) return;
+
+    // Check if query matches any known Sibagat barangay
+    const matched = SIBAGAT_ZONES.find((z) => cleanQuery.includes(z.name.toLowerCase()));
+
+    if (matched) {
+      setActiveZone(matched);
+      setCoverageResult({
+        tested: true,
+        available: matched.status === 'Active',
+        barangayName: matched.name,
+        message:
+          matched.status === 'Active'
+            ? `Pure Fiber is ACTIVE in Barangay ${matched.name}, Sibagat! Speeds ${matched.speed} are ready for same-day dispatch.`
+            : `Barangay ${matched.name}, Sibagat is in our current expansion phase. You can pre-book now to be connected first!`,
+      });
+      setPrefilledBarangay(matched.name);
+      setPrefilledAddress(query);
+    } else {
+      // General Sibagat check
+      const isSibagatOrAgusan =
+        cleanQuery.includes('sibagat') ||
+        cleanQuery.includes('agusan') ||
+        cleanQuery.includes('purok') ||
+        cleanQuery.includes('highway') ||
+        cleanQuery.includes('street') ||
+        cleanQuery.includes('st');
+
+      if (isSibagatOrAgusan) {
+        setCoverageResult({
+          tested: true,
+          available: true,
+          barangayName: 'Sibagat Area',
+          message: `Great news! Sky-Tech Fiber covers addresses in Sibagat, Agusan del Norte. Let us verify your exact pole connection.`,
+        });
+        setPrefilledAddress(query);
+      } else {
+        setCoverageResult({
+          tested: true,
+          available: true,
+          barangayName: query,
+          message: `Address received in Sibagat service area. Proceed to apply and our local dispatch team will verify the nearest fiber tap.`,
+        });
+        setPrefilledAddress(query);
+      }
+    }
+  };
+
+  
+  // Scroll reveal observer
+  useEffect(() => {
+    const elements = document.querySelectorAll(
+      '.reveal-on-scroll, .reveal-scale, .reveal-fade-left, .reveal-fade-right'
+    );
+    if (!elements.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-revealed');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+    );
+
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
+  const handleCoverageSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    runCoverageCheck(coverageAddress);
+  };
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-white text-slate-900">
-      <section className="relative overflow-hidden bg-[#071329] text-white">
-        <div className="pointer-events-none absolute inset-0 opacity-30" style={{ backgroundImage: 'linear-gradient(rgba(94,145,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(94,145,255,.08) 1px, transparent 1px)', backgroundSize: '52px 52px' }} />
-        <div className="pointer-events-none absolute -left-32 -top-48 h-[34rem] w-[34rem] rounded-full bg-blue-600/20 blur-3xl" />
-        <div className="pointer-events-none absolute right-0 top-32 h-[28rem] w-[28rem] rounded-full bg-indigo-500/20 blur-3xl" />
-        <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-[#071329]/90 backdrop-blur-md">
-          <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-10" aria-label="Main navigation">
-          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-3 text-left" aria-label="Sky-Tech ISP home">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#2563eb] text-white shadow-lg shadow-blue-950/40"><Icon name="wifi" size={23} /></span>
-            <span className="text-lg font-extrabold tracking-tight">Sky-Tech <span className="text-blue-400">ISP</span></span>
-          </button>
-          <div className="hidden items-center gap-7 text-sm font-semibold text-blue-100/75 md:flex">
-            <a href="#features" className="transition hover:text-white">Why Sky-Tech</a><a href="#plans" className="transition hover:text-white">Plans</a><a href="#coverage" className="transition hover:text-white">Coverage</a><a href="#support" className="transition hover:text-white">Support</a>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3"><button onClick={onLogin} className="rounded-full px-3 py-2 text-sm font-bold text-blue-100 transition hover:bg-white/10 hover:text-white sm:px-4">Sign in</button><button onClick={onBook} className="rounded-full bg-[#2563eb] px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-950/40 transition hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 focus:ring-offset-[#071329]">Book now</button></div>
+    <div className="min-h-screen bg-white text-slate-900 font-sans antialiased selection:bg-sky-500 selection:text-white">
+      {/* -------------------- NAVIGATION BAR -------------------- */}
+      <header
+        className={`sticky top-0 z-40 w-full transition-all duration-300 ${
+          isScrolled
+            ? 'bg-white/75 backdrop-blur-md shadow-xs py-2 border-b border-slate-100/70'
+            : 'bg-transparent py-3 sm:py-4 border-b border-transparent'
+        }`}
+      >
+        <div className="mx-auto flex h-16 sm:h-20 max-w-7xl items-center justify-between px-6 sm:px-12 lg:px-16">
+          {/* Logo */}
+          <Link
+            href="/landing-page"
+            onClick={(e) => {
+              setMobileMenuOpen(false);
+              if (typeof window !== 'undefined') {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (window.location.hash) {
+                  window.history.pushState(null, '', '/landing-page');
+                }
+              }
+            }}
+            className="flex items-center gap-3 group cursor-pointer"
+            aria-label="Sky-Tech Fiber Home"
+          >
+            <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full border-2 border-sky-400/90 bg-[#071329] shadow-sm group-hover:scale-105 transition-transform flex items-center justify-center">
+              <Image
+                src="/images/Skytech.jpg"
+                alt="Sky-Tech Fiber Logo"
+                width={44}
+                height={44}
+                className="h-full w-full object-cover rounded-full scale-110"
+                priority
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-extrabold tracking-tight text-slate-900">Sky-Tech</span>
+              <span className="text-[10px] font-extrabold tracking-[0.22em] text-[#0284c7] uppercase">
+                HOME FIBER · SIBAGAT
+              </span>
+            </div>
+          </Link>
+
+          {/* Desktop Nav Links */}
+          <nav className="hidden items-center gap-8 md:flex" aria-label="Main navigation">
+            <a href="#why-sky-tech" className="text-sm font-semibold text-slate-600 transition hover:text-[#0284c7]">
+              Why Sky-Tech
+            </a>
+            <a href="#fiber-plans" className="text-sm font-semibold text-slate-600 transition hover:text-[#0284c7]">
+              Fiber Plans
+            </a>
+            <a href="#check-coverage" className="text-sm font-semibold text-slate-600 transition hover:text-[#0284c7]">
+              Coverage & Map
+            </a>
+            <a href="#local-support" className="text-sm font-semibold text-slate-600 transition hover:text-[#0284c7]">
+              Local Support
+            </a>
           </nav>
-        </header>
-        <div className="relative z-10 mx-auto grid max-w-7xl gap-12 px-5 pb-20 pt-28 lg:grid-cols-[.92fr_1.08fr] lg:items-center lg:px-10 lg:pb-28 lg:pt-36">
-          <div><div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-xs font-bold text-emerald-300"><span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_12px_#34d399]" /> Service is operational</div><h1 className="mt-6 max-w-xl text-4xl font-black leading-[1.05] tracking-tight sm:text-6xl">The internet your home has been <span className="text-blue-400">waiting for.</span></h1><p className="mt-6 max-w-lg text-base leading-7 text-blue-100/70 sm:text-lg">Reliable home fiber, local customer support, and plans starting at ₱999 per month. Free installation gets you online without the hassle.</p><div className="mt-8 flex flex-wrap gap-3"><button onClick={onBook} className="inline-flex items-center gap-2 rounded-full bg-[#2563eb] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300">Book now <Icon name="arrow" size={17} /></button><a href="#plans" className="rounded-full border border-blue-200/20 bg-white/5 px-6 py-3.5 text-sm font-bold text-blue-100 transition hover:bg-white/10">Explore plans</a></div><div className="mt-9 flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-blue-100/65">{['No lock-in contract', 'Unlimited data', 'Free installation'].map((item) => <span key={item} className="flex items-center gap-2"><Icon name="check" size={16} />{item}</span>)}</div></div>
-          <div className="relative min-h-[22rem] overflow-visible sm:min-h-[31rem]"><div className="absolute -inset-5 rounded-[2rem] bg-blue-500/20 blur-2xl" /><div className="relative h-full min-h-[22rem] overflow-hidden rounded-[2rem] border border-white/10 bg-[#0b1d3a] shadow-2xl sm:min-h-[31rem]"><img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=85" alt="Family using a laptop together at home" className="h-full min-h-[22rem] w-full object-cover opacity-85 sm:min-h-[31rem]" /><div className="absolute inset-0 bg-gradient-to-t from-[#071329] via-[#071329]/10 to-transparent" /><div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8"><p className="max-w-sm text-xl font-bold leading-snug">Every call, class, stream, and game—connected.</p><p className="mt-2 text-sm text-blue-100/65">Fiber built for the way your home lives.</p></div></div><div className="absolute -left-3 top-7 rounded-2xl border border-white/10 bg-[#0b1d3a]/95 p-4 shadow-xl backdrop-blur sm:-left-7 sm:top-12"><p className="text-xs font-semibold text-blue-200/65">Network uptime</p><p className="mt-1 text-2xl font-black text-white">99.9%</p><p className="mt-1 text-xs font-semibold text-emerald-300">● Excellent</p></div><div className="absolute -bottom-5 -right-3 rounded-2xl border border-blue-400/20 bg-[#2563eb] p-4 shadow-xl sm:-right-7 sm:bottom-8"><p className="text-xs font-semibold text-blue-100">Home speed</p><p className="mt-1 text-2xl font-black text-white">100 Mbps</p></div></div>
+
+          {/* Right Action Buttons */}
+          <div className="hidden items-center gap-5 sm:flex">
+            <button
+              onClick={onLogin}
+              className="text-sm font-semibold text-slate-700 transition hover:text-[#0284c7]"
+            >
+              Subscriber Sign In
+            </button>
+            <button
+              onClick={scrollToCoverage}
+              className="rounded-xl bg-[#0284c7] px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-sky-500/20 transition hover:bg-[#0369a1] active:scale-95"
+            >
+              Check Availability
+            </button>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="grid h-10 w-10 place-items-center rounded-lg text-slate-600 hover:bg-slate-100 md:hidden"
+            aria-label="Toggle navigation menu"
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
+        {/* Mobile Dropdown Menu */}
+        {mobileMenuOpen && (
+          <div className="mx-4 mt-2 rounded-2xl border border-slate-100 bg-white/95 backdrop-blur-md px-5 py-4 shadow-xl md:hidden">
+            <nav className="flex flex-col gap-3">
+              <a
+                href="#why-sky-tech"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-2 text-sm font-semibold text-slate-700"
+              >
+                Why Sky-Tech
+              </a>
+              <a
+                href="#fiber-plans"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-2 text-sm font-semibold text-slate-700"
+              >
+                Fiber Plans
+              </a>
+              <a
+                href="#check-coverage"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-2 text-sm font-semibold text-slate-700"
+              >
+                Coverage & Map
+              </a>
+              <a
+                href="#local-support"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-2 text-sm font-semibold text-slate-700"
+              >
+                Local Support
+              </a>
+              <hr className="my-2 border-slate-100" />
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onLogin();
+                }}
+                className="w-full text-left py-2 text-sm font-semibold text-slate-700"
+              >
+                Subscriber Sign In
+              </button>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  scrollToCoverage();
+                }}
+                className="mt-2 w-full rounded-xl bg-[#0284c7] py-3 text-center text-sm font-bold text-white"
+              >
+                Check Availability
+              </button>
+            </nav>
+          </div>
+        )}
+      </header>
+
+      {/* -------------------- HERO SECTION (IMAGE 1) -------------------- */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#f8fafc] via-white to-white pt-8 pb-16 lg:pt-14 lg:pb-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-8">
+            {/* Left Column: Hero Copy & Address Check */}
+            <div className="lg:col-span-6 xl:col-span-7">
+              {/* Feature Badge */}
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-1.5 text-xs font-semibold text-emerald-700 shadow-sm">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                100% Fiber Optic Network · Sibagat, Agusan del Norte
+              </div>
+
+              {/* Headline */}
+              <h1 className="mt-6 text-4xl font-black tracking-tight text-slate-900 sm:text-5xl lg:text-[54px] lg:leading-[1.12]">
+                Fast, honest home <br />
+                fiber internet for <br />
+                <span className="text-[#0284c7]">your family.</span>
+              </h1>
+
+              {/* Subtitle */}
+              <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
+                Say goodbye to lag, hidden price spikes, and overseas customer bots. Sky-Tech delivers ultra-reliable fiber backed by our friendly local team right here in Sibagat.
+              </p>
+
+              {/* Instant Fiber Availability Box */}
+              <div className="mt-8 max-w-lg rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm sm:p-5">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  CHECK INSTANT FIBER AVAILABILITY
+                </label>
+                <form onSubmit={handleHeroCheckAddress} className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <div className="flex flex-1 items-center rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 transition focus-within:border-[#0284c7] focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-100">
+                    <MapPin size={18} className="shrink-0 text-slate-400" />
+                    <input
+                      type="text"
+                      value={heroAddress}
+                      onChange={(e) => setHeroAddress(e.target.value)}
+                      placeholder="Enter your Barangay or Street in Sibagat..."
+                      style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
+                      className="ml-2 w-full border-0 border-none bg-transparent p-0 text-sm text-slate-800 placeholder-slate-400 outline-none ring-0 shadow-none focus:border-0 focus:border-none focus:outline-none focus:ring-0 focus:shadow-none"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#0284c7] px-5 py-3 text-xs sm:text-sm font-bold text-white shadow-md shadow-sky-500/20 transition hover:bg-[#0369a1] active:scale-95"
+                  >
+                    Check Address <ArrowRight size={15} />
+                  </button>
+                </form>
+              </div>
+
+              {/* Value Propositions List */}
+              <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs sm:text-sm font-semibold text-slate-600">
+                <div className="flex items-center gap-1.5">
+                  <Check size={16} className="text-[#0284c7] stroke-[3]" />
+                  <span>Plans starting at ₱599/mo</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Check size={16} className="text-[#0284c7] stroke-[3]" />
+                  <span>No lock-in contract options</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Check size={16} className="text-[#0284c7] stroke-[3]" />
+                  <span>Free Wi-Fi 6 Router Installation</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Sky-Tech Hero Showcase Card */}
+            <div className="lg:col-span-6 xl:col-span-5 flex justify-center lg:justify-end">
+              <div className="w-full max-w-xs sm:max-w-sm">
+                <div className="relative overflow-hidden rounded-3xl border border-sky-400/30 bg-gradient-to-b from-[#0a192f] via-[#0b1d3a] to-[#071329] p-6 sm:p-7 shadow-xl text-center text-white">
+                  <div className="absolute -top-16 -left-16 h-40 w-40 rounded-full bg-sky-500/20 blur-2xl pointer-events-none" />
+                  <div className="absolute -bottom-16 -right-16 h-40 w-40 rounded-full bg-blue-600/20 blur-2xl pointer-events-none" />
+
+                  <div className="relative mx-auto flex justify-center">
+                    <div className="relative">
+                      <div className="absolute -inset-1.5 rounded-2xl bg-gradient-to-r from-sky-400 to-blue-600 opacity-60 blur-md animate-pulse" />
+                      <div className="relative h-28 w-48 sm:h-32 sm:w-56 overflow-hidden rounded-2xl border-2 border-sky-400/90 bg-[#071329] shadow-xl flex items-center justify-center p-2 transition-transform duration-300 hover:scale-[1.02]">
+                        <Image
+                          src="/images/Skytech.jpg"
+                          alt="Sky-Tech Fiber Internet"
+                          width={240}
+                          height={140}
+                          className="h-full w-full object-contain rounded-xl"
+                          priority
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="relative mt-4 space-y-1">
+                    <div className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/15 border border-sky-400/30 px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-sky-300">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Pure Fiber Network
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white pt-1">
+                      Sky-Tech Fiber
+                    </h3>
+                    <p className="text-xs text-slate-300 font-medium">
+                      Fast · Stable · Connected in Sibagat
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="border-b border-slate-200 bg-white px-5 py-8 lg:px-10"><div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 sm:grid-cols-4"><div><p className="text-2xl font-black text-[#071329] sm:text-3xl">5,000+</p><p className="mt-1 text-xs font-semibold text-slate-500 sm:text-sm">connected homes</p></div><div><p className="text-2xl font-black text-[#071329] sm:text-3xl">99.9%</p><p className="mt-1 text-xs font-semibold text-slate-500 sm:text-sm">average uptime</p></div><div><p className="text-2xl font-black text-[#071329] sm:text-3xl">&lt;2 hrs</p><p className="mt-1 text-xs font-semibold text-slate-500 sm:text-sm">support response</p></div><div><p className="text-2xl font-black text-[#071329] sm:text-3xl">24/7</p><p className="mt-1 text-xs font-semibold text-slate-500 sm:text-sm">local assistance</p></div></div></section>
+      {/* -------------------- STATS STRIP SECTION -------------------- */}
+      <section className="border-y border-slate-100 bg-white py-10">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 gap-8 text-center md:grid-cols-4 md:divide-x md:divide-slate-100">
+            <div>
+              <p className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">0</p>
+              <p className="mt-1 text-xs font-semibold text-slate-500 sm:text-sm">Local Homes Connected</p>
+            </div>
+            <div>
+              <p className="text-3xl font-black tracking-tight text-[#0284c7] sm:text-4xl">99.9%</p>
+              <p className="mt-1 text-xs font-semibold text-slate-500 sm:text-sm">Guaranteed Uptime</p>
+            </div>
+            <div>
+              <p className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">&lt; 15 mins</p>
+              <p className="mt-1 text-xs font-semibold text-slate-500 sm:text-sm">Support Call Response</p>
+            </div>
+            <div>
+              <p className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">24 / 7</p>
+              <p className="mt-1 text-xs font-semibold text-slate-500 sm:text-sm">Sibagat Tech Dispatch</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <section id="features" className="bg-[#f7faff] px-5 py-20 lg:px-10"><div className="mx-auto max-w-7xl"><p className="text-xs font-bold uppercase tracking-[.2em] text-[#2563eb]">Why Sky-Tech</p><h2 className="mt-3 max-w-2xl text-3xl font-black tracking-tight text-[#071329] sm:text-4xl">Reliable by design. Human when you need us.</h2><div className="mt-10 grid gap-4 md:grid-cols-2"><article className="rounded-3xl bg-[#0b1d3a] p-7 text-white shadow-xl shadow-blue-100 md:col-span-2 md:flex md:items-center md:justify-between md:p-9"><div><div className="grid h-11 w-11 place-items-center rounded-xl bg-blue-500/15 text-blue-300"><Icon name="wifi" /></div><h3 className="mt-6 text-xl font-bold">Pure fiber to your home</h3><p className="mt-2 max-w-xl text-sm leading-6 text-blue-100/65">A direct fiber connection delivers consistent speed for every room and every device.</p></div><div className="mt-7 hidden h-28 w-56 items-center justify-center rounded-2xl border border-blue-400/20 bg-blue-500/10 md:flex"><div className="h-16 w-16 rounded-full border border-blue-300/30 p-3"><div className="grid h-full place-items-center rounded-full bg-blue-500/20 text-blue-300"><Icon name="wifi" /></div></div></div></article>{benefits.slice(1).map(([icon, title, text]) => <article key={title} className="rounded-3xl border border-slate-200 bg-white p-7 transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/60"><div className="grid h-11 w-11 place-items-center rounded-xl bg-blue-50 text-[#2563eb]"><Icon name={icon} /></div><h3 className="mt-6 text-lg font-bold text-[#071329]">{title}</h3><p className="mt-2 text-sm leading-6 text-slate-500">{text}</p></article>)}</div></div></section>
+      {/* -------------------- WHY SKY-TECH SECTION (IMAGE 2) -------------------- */}
+      <section id="why-sky-tech" className="bg-[#f8fafc] py-20 lg:py-28 scroll-mt-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* Section Header */}
+          <div className="text-center reveal-on-scroll">
+            <p className="text-xs font-extrabold uppercase tracking-widest text-[#0284c7]">
+              WHY SKY-TECH FIBER
+            </p>
+            <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
+              Built for real homes. Backed by real neighbors.
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-slate-500 sm:text-base">
+              We built the internet provider we always wished we had in Sibagat—no fine-print tricks, constant dropouts, or impersonal phone menus.
+            </p>
+          </div>
 
-      <section id="plans" className="bg-white px-5 py-20 lg:px-10"><div className="mx-auto max-w-7xl"><div className="flex flex-wrap items-end justify-between gap-5"><div><p className="text-xs font-bold uppercase tracking-[.2em] text-[#2563eb]">Internet plans</p><h2 className="mt-3 text-3xl font-black tracking-tight text-[#071329] sm:text-4xl">A plan for your kind of home.</h2></div><p className="max-w-sm text-sm leading-6 text-slate-500">Simple monthly pricing. Unlimited data. No lock-in contract.</p></div><div className="mt-10 grid gap-5 lg:grid-cols-3">{plans.map((plan) => { const isPopular = plan.name === popularPlan?.name; return <article key={plan.name} className={`relative rounded-3xl border p-7 ${isPopular ? 'border-[#2563eb] bg-[#0b1d3a] text-white shadow-xl shadow-blue-100' : 'border-slate-200 bg-white'}`}>{isPopular && <span className="absolute right-6 top-6 rounded-full bg-blue-500/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-300">Most popular</span>}<p className={`text-sm font-bold ${isPopular ? 'text-blue-300' : 'text-slate-500'}`}>{plan.name}</p><p className="mt-6 text-4xl font-black">{plan.speedMbps} Mbps</p><p className={`mt-2 text-sm ${isPopular ? 'text-blue-100/60' : 'text-slate-500'}`}>Reliable home fiber</p><p className="mt-8 text-2xl font-black">₱{plan.price.toLocaleString()}<span className={`text-sm font-semibold ${isPopular ? 'text-blue-100/60' : 'text-slate-400'}`}> / month</span></p><div className={`my-7 border-t ${isPopular ? 'border-white/10' : 'border-slate-100'}`} />{['Unlimited data', 'Free installation'].map((feature) => <p key={feature} className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isPopular ? 'text-blue-100' : 'text-slate-600'}`}><Icon name="check" size={16} />{feature}</p>)}<button onClick={onBook} className={`mt-5 w-full rounded-xl px-4 py-3 text-sm font-bold transition ${isPopular ? 'bg-[#2563eb] text-white hover:bg-blue-500' : 'bg-blue-50 text-[#2563eb] hover:bg-blue-100'}`}>Choose plan</button></article>; })}</div></div></section>
+          {/* 6 Feature Cards Grid */}
+          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Card 1 */}
+            <div className="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+              <div className="grid h-12 w-12 place-items-center rounded-xl bg-sky-50 text-[#0284c7]">
+                <Zap size={24} />
+              </div>
+              <h3 className="mt-6 text-lg font-bold text-slate-900">Dedicated Pure Fiber</h3>
+              <p className="mt-2.5 text-sm leading-relaxed text-slate-500">
+                Direct fiber-optic connection straight into your home. Equal upload and download speeds so gaming, video calling, and working from home never lag.
+              </p>
+            </div>
 
-      <section id="coverage" className="bg-white px-5 pb-20 lg:px-10"><div className="relative mx-auto max-w-7xl overflow-hidden rounded-[2rem] bg-[#071329] px-7 py-14 text-white sm:px-12"><div className="pointer-events-none absolute -right-20 -top-36 h-96 w-96 rounded-full border border-blue-400/20 shadow-[0_0_0_35px_rgba(37,99,235,.06),0_0_0_70px_rgba(37,99,235,.04)]" /><div className="relative z-10 max-w-xl"><div className="grid h-11 w-11 place-items-center rounded-xl bg-blue-500/15 text-blue-300"><Icon name="pin" /></div><h2 className="mt-6 text-3xl font-black tracking-tight sm:text-4xl">See if Sky-Tech fiber has reached your street.</h2><p className="mt-4 text-sm leading-6 text-blue-100/65">Tell us where you live and our team will check coverage, guide you through the plan options, and arrange a convenient installation.</p><button onClick={onBook} className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#2563eb] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-blue-500">Check availability <Icon name="arrow" size={17} /></button></div></div></section>
+            {/* Card 2 */}
+            <div className="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+              <div className="grid h-12 w-12 place-items-center rounded-xl bg-sky-50 text-[#0284c7]">
+                <Users size={24} />
+              </div>
+              <h3 className="mt-6 text-lg font-bold text-slate-900">24/7 Local Support</h3>
+              <p className="mt-2.5 text-sm leading-relaxed text-slate-500">
+                When you call us, you speak directly to our local technicians in Sibagat. No automated loops or overseas call centers.
+              </p>
+            </div>
 
-      <section id="support" className="bg-[#f7faff] px-5 py-20 lg:px-10"><div className="mx-auto max-w-4xl text-center"><div className="flex justify-center gap-1 text-amber-400" aria-label="5 out of 5 stars">★★★★★</div><blockquote className="mt-6 text-2xl font-bold leading-snug tracking-tight text-[#071329] sm:text-4xl">“Sky-Tech keeps my online shop running smoothly. When I need help, I get a real answer from a team that knows our area.”</blockquote><div className="mt-8 flex items-center justify-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-full bg-[#2563eb] text-sm font-black text-white">MR</span><div className="text-left"><p className="text-sm font-bold text-[#071329]">Mia Reyes</p><p className="text-xs font-semibold text-slate-500">Online business owner · Home Plus</p></div></div></div></section>
+            {/* Card 3 */}
+            <div className="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+              <div className="grid h-12 w-12 place-items-center rounded-xl bg-sky-50 text-[#0284c7]">
+                <Coins size={24} />
+              </div>
+              <h3 className="mt-6 text-lg font-bold text-slate-900">Transparent Pricing</h3>
+              <p className="mt-2.5 text-sm leading-relaxed text-slate-500">
+                What you see is what you pay. No unexpected bill increases after 6 months, no modem rental hidden surcharges, and zero setup fee surprises.
+              </p>
+            </div>
 
-      <footer className="bg-[#071329] px-5 py-12 text-blue-100/60 lg:px-10"><div className="mx-auto grid max-w-7xl gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr]"><div><div className="flex items-center gap-3 text-white"><span className="grid h-9 w-9 place-items-center rounded-lg bg-[#2563eb]"><Icon name="wifi" size={20} /></span><span className="font-extrabold">Sky-Tech <span className="text-blue-400">ISP</span></span></div><p className="mt-4 max-w-xs text-sm leading-6">Reliable fiber internet and local support for the homes and businesses we serve.</p></div><div><p className="text-xs font-bold uppercase tracking-wider text-blue-200">Explore</p><div className="mt-4 space-y-3 text-sm"><a href="#features" className="block hover:text-white">Benefits</a><a href="#plans" className="block hover:text-white">Plans</a><a href="#coverage" className="block hover:text-white">Coverage</a></div></div><div><p className="text-xs font-bold uppercase tracking-wider text-blue-200">Account</p><div className="mt-4 space-y-3 text-sm"><button onClick={onLogin} className="block hover:text-white">Subscriber login</button><button onClick={onBook} className="block hover:text-white">Check availability</button></div></div></div><div className="mx-auto mt-10 flex max-w-7xl flex-col gap-3 border-t border-white/10 pt-6 text-xs sm:flex-row sm:items-center sm:justify-between"><span>© 2026 Sky-Tech ISP. All rights reserved.</span><span>Photo by <a href="https://unsplash.com" target="_blank" rel="noreferrer" className="text-blue-300 hover:text-white">Unsplash</a>.</span></div></footer>
-    </main>
+            {/* Card 4 */}
+            <div className="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+              <div className="grid h-12 w-12 place-items-center rounded-xl bg-sky-50 text-[#0284c7]">
+                <ShieldCheck size={24} />
+              </div>
+              <h3 className="mt-6 text-lg font-bold text-slate-900">No Lock-In Flexibility</h3>
+              <p className="mt-2.5 text-sm leading-relaxed text-slate-500">
+                We believe in earning your trust every month. Choose our standard month-to-month plan or save more with annual commitments—your choice.
+              </p>
+            </div>
+
+            {/* Card 5 */}
+            <div className="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+              <div className="grid h-12 w-12 place-items-center rounded-xl bg-sky-50 text-[#0284c7]">
+                <Smartphone size={24} />
+              </div>
+              <h3 className="mt-6 text-lg font-bold text-slate-900">Easy Account App</h3>
+              <p className="mt-2.5 text-sm leading-relaxed text-slate-500">
+                Pay bills in one tap, test your live home speeds, request support, or manage Wi-Fi settings from a simple mobile subscriber portal.
+              </p>
+            </div>
+
+            {/* Card 6 */}
+            <div className="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+              <div className="grid h-12 w-12 place-items-center rounded-xl bg-sky-50 text-[#0284c7]">
+                <Wifi size={24} />
+              </div>
+              <h3 className="mt-6 text-lg font-bold text-slate-900">Wi-Fi 6 Router Included</h3>
+              <p className="mt-2.5 text-sm leading-relaxed text-slate-500">
+                Get latest-generation dual-band Wi-Fi 6 hardware installed free of charge to eliminate dead spots in every room.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* -------------------- FIBER PLANS SECTION (IMAGE 3) -------------------- */}
+      <section id="fiber-plans" className="bg-white py-20 lg:py-28 scroll-mt-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* Section Header */}
+          <div className="text-center reveal-on-scroll">
+            <p className="text-xs font-extrabold uppercase tracking-widest text-[#0284c7]">
+              STRAIGHTFORWARD PRICING
+            </p>
+            <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
+              A fiber plan for every household size.
+            </h2>
+            <p className="mx-auto mt-2 max-w-xl text-sm text-slate-500 sm:text-base">
+              All plans include unlimited data, free installation, and high-speed Wi-Fi 6 router.
+            </p>
+
+            {/* Monthly / Annual Toggle Switch */}
+            <div className="mt-8 flex justify-center">
+              <div className="inline-flex items-center rounded-full bg-slate-100 p-1 text-xs font-semibold sm:text-sm">
+                <button
+                  type="button"
+                  onClick={() => setBillingCycle('monthly')}
+                  className={`rounded-full px-5 py-2 transition ${
+                    billingCycle === 'monthly'
+                      ? 'bg-white text-slate-900 shadow-sm font-bold'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Month-to-Month
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBillingCycle('annual')}
+                  className={`rounded-full px-5 py-2 transition ${
+                    billingCycle === 'annual'
+                      ? 'bg-white text-slate-900 shadow-sm font-bold'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Annual (Save 10%)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Pricing Cards Grid */}
+          <div className="mt-14 grid items-stretch gap-8 lg:grid-cols-3">
+            {/* Plan 1: Fiber Starter */}
+            <div style={{ transitionDelay: '0ms' }} className="reveal-scale flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition hover:shadow-md sm:p-8">
+              <div>
+                <span className="inline-block rounded-full bg-slate-100 px-3.5 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                  FIBER STARTER
+                </span>
+                <div className="mt-4">
+                  <span className="text-3xl font-black text-slate-900">25 Mbps</span>
+                  <p className="mt-1 text-xs font-medium text-slate-500">
+                    Ideal for small apartments & basic browsing
+                  </p>
+                </div>
+                <div className="mt-6 flex items-baseline gap-1">
+                  <span className="text-4xl font-black text-slate-900">
+                    ₱{billingCycle === 'annual' ? '539' : '599'}
+                  </span>
+                  <span className="text-sm font-semibold text-slate-500">/ month</span>
+                </div>
+                <p className="mt-1 text-xs text-slate-400">Billed monthly • No contract</p>
+
+                <hr className="my-6 border-slate-100" />
+
+                <ul className="space-y-3.5 text-xs sm:text-sm font-medium text-slate-700">
+                  <li className="flex items-center gap-2.5">
+                    <Check size={17} className="text-emerald-500 stroke-[2.5]" />
+                    <span>25 Mbps equal Upload & Download</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check size={17} className="text-emerald-500 stroke-[2.5]" />
+                    <span>Unlimited High-Speed Data</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check size={17} className="text-emerald-500 stroke-[2.5]" />
+                    <span>Free Installation & Standard Router</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check size={17} className="text-emerald-500 stroke-[2.5]" />
+                    <span>24/7 Local Customer Support</span>
+                  </li>
+                </ul>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => openPlanModal('Fiber_25Mbps')}
+                className="mt-8 block w-full rounded-xl bg-slate-100 py-3.5 text-center text-sm font-bold text-slate-800 transition hover:bg-slate-200 active:scale-95"
+              >
+                Choose 25 Mbps
+              </button>
+            </div>
+
+            {/* Plan 2: Home Plus (Featured Center Card) */}
+            <div style={{ transitionDelay: '100ms' }} className="reveal-scale relative flex flex-col justify-between rounded-3xl border-2 border-[#0284c7] bg-white p-7 shadow-xl shadow-sky-500/10 sm:p-8">
+              {/* Highlight Tag */}
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-[#0284c7] px-4 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-md">
+                MOST POPULAR FOR FAMILIES
+              </div>
+
+              <div>
+                <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-[#0284c7]">
+                  HOME PLUS
+                </span>
+                <div className="mt-4">
+                  <span className="text-3xl font-black text-slate-900">50 Mbps</span>
+                  <p className="mt-1 text-xs font-medium text-slate-500">
+                    Perfect for 4K streaming & multiple devices
+                  </p>
+                </div>
+                <div className="mt-6 flex items-baseline gap-1">
+                  <span className="text-4xl font-black text-[#0284c7]">
+                    ₱{billingCycle === 'annual' ? '719' : '799'}
+                  </span>
+                  <span className="text-sm font-semibold text-slate-500">/ month</span>
+                </div>
+                <p className="mt-1 text-xs text-slate-400">Billed monthly • No lock-in</p>
+
+                <hr className="my-6 border-slate-100" />
+
+                <ul className="space-y-3.5 text-xs sm:text-sm font-medium text-slate-700">
+                  <li className="flex items-center gap-2.5">
+                    <Check size={17} className="text-emerald-500 stroke-[2.5]" />
+                    <span>50 Mbps equal Upload & Download</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check size={17} className="text-emerald-500 stroke-[2.5]" />
+                    <span>Unlimited High-Speed Data</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check size={17} className="text-emerald-500 stroke-[2.5]" />
+                    <span>Free Wi-Fi 6 Router Upgrade</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check size={17} className="text-emerald-500 stroke-[2.5]" />
+                    <span>Priority Same-Day Tech Dispatch</span>
+                  </li>
+                </ul>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => openPlanModal('Fiber_50Mbps')}
+                className="mt-8 block w-full rounded-xl bg-[#0284c7] py-3.5 text-center text-sm font-bold text-white shadow-md shadow-sky-500/25 transition hover:bg-[#0369a1] active:scale-95"
+              >
+                Get 50 Mbps Now
+              </button>
+            </div>
+
+            {/* Plan 3: Max Ultra */}
+            <div style={{ transitionDelay: '200ms' }} className="reveal-scale flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition hover:shadow-md sm:p-8">
+              <div>
+                <span className="inline-block rounded-full bg-slate-100 px-3.5 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                  MAX ULTRA
+                </span>
+                <div className="mt-4">
+                  <span className="text-3xl font-black text-slate-900">100 Mbps</span>
+                  <p className="mt-1 text-xs font-medium text-slate-500">
+                    Heavy gaming, remote work & smart homes
+                  </p>
+                </div>
+                <div className="mt-6 flex items-baseline gap-1">
+                  <span className="text-4xl font-black text-slate-900">
+                    ₱{billingCycle === 'annual' ? '899' : '999'}
+                  </span>
+                  <span className="text-sm font-semibold text-slate-500">/ month</span>
+                </div>
+                <p className="mt-1 text-xs text-slate-400">Billed monthly • No contract</p>
+
+                <hr className="my-6 border-slate-100" />
+
+                <ul className="space-y-3.5 text-xs sm:text-sm font-medium text-slate-700">
+                  <li className="flex items-center gap-2.5">
+                    <Check size={17} className="text-emerald-500 stroke-[2.5]" />
+                    <span>100 Mbps Ultra-Low Latency</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check size={17} className="text-emerald-500 stroke-[2.5]" />
+                    <span>Unlimited High-Speed Data</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check size={17} className="text-emerald-500 stroke-[2.5]" />
+                    <span>Wi-Fi 6 Mesh Ready Hardware</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check size={17} className="text-emerald-500 stroke-[2.5]" />
+                    <span>Dedicated Account Specialist</span>
+                  </li>
+                </ul>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => openPlanModal('Fiber_100Mbps')}
+                className="mt-8 block w-full rounded-xl bg-slate-100 py-3.5 text-center text-sm font-bold text-slate-800 transition hover:bg-slate-200 active:scale-95"
+              >
+                Choose 100 Mbps
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* -------------------- COVERAGE & INTERACTIVE MAP SECTION (IMAGE 4 ENHANCED) -------------------- */}
+      <section id="check-coverage" className="bg-[#0284c7] py-20 text-white scroll-mt-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="text-center reveal-on-scroll">
+            <span className="inline-block rounded-full bg-white/20 px-3.5 py-1 text-xs font-bold uppercase tracking-widest text-white backdrop-blur-sm">
+              FIBER NETWORK MAP · SIBAGAT, AGUSAN DEL NORTE
+            </span>
+            <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
+              Check if Sky-Tech Fiber has <br className="hidden sm:inline" />
+              reached your street.
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-blue-100 sm:text-base">
+              Sky-Tech is locally headquartered in Sibagat. Type your barangay or street below, or explore the live coverage map to see real-time fiber availability.
+            </p>
+
+            {/* Address Search Form */}
+            <form onSubmit={handleCoverageSubmit} className="mx-auto mt-8 flex max-w-xl flex-col gap-2 rounded-2xl bg-white p-2 shadow-2xl sm:flex-row sm:items-center">
+              <div className="flex flex-1 items-center px-3">
+                <Search size={18} className="text-slate-400 shrink-0" />
+                <input
+                  type="text"
+                  value={coverageAddress}
+                  onChange={(e) => setCoverageAddress(e.target.value)}
+                  placeholder="e.g. Poblacion, Mahayahay, San Vicente, El Rio..."
+                  style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
+                  className="w-full border-0 border-none bg-transparent px-3 py-3 text-sm text-slate-800 placeholder-slate-400 outline-none ring-0 shadow-none focus:border-0 focus:border-none focus:outline-none focus:ring-0 focus:shadow-none"
+                />
+              </div>
+              <button
+                type="submit"
+                className="rounded-xl bg-[#0f172a] px-7 py-3 text-sm font-bold text-white transition hover:bg-[#1e293b] active:scale-95"
+              >
+                Check Coverage
+              </button>
+            </form>
+
+            {/* Instant Search Result Feedback */}
+            {coverageResult && (
+              <div className="mx-auto mt-6 max-w-xl animate-fadeIn">
+                <div
+                  className={`rounded-2xl p-5 text-left border ${
+                    coverageResult.available
+                      ? 'bg-emerald-500/15 border-emerald-300/40 text-white'
+                      : 'bg-amber-500/15 border-amber-300/40 text-white'
+                  } backdrop-blur-md shadow-xl`}
+                >
+                  <div className="flex items-start gap-3.5">
+                    {coverageResult.available ? (
+                      <CheckCircle className="h-6 w-6 text-emerald-300 shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertCircle className="h-6 w-6 text-amber-300 shrink-0 mt-0.5" />
+                    )}
+                    <div className="flex-1">
+                      <p className="font-extrabold text-base">
+                        {coverageResult.available ? '✓ Fiber Available!' : 'Upcoming Expansion Area'}
+                      </p>
+                      <p className="mt-1 text-xs sm:text-sm text-blue-50 leading-relaxed">
+                        {coverageResult.message}
+                      </p>
+                      <div className="mt-4 flex flex-wrap gap-2.5">
+                        <button
+                          onClick={() => {
+                            setPrefilledBarangay(coverageResult.barangayName);
+                            setPrefilledAddress(coverageAddress || coverageResult.barangayName);
+                            setIsModalOpen(true);
+                          }}
+                          className="rounded-lg bg-white px-4 py-2 text-xs font-bold text-[#0284c7] shadow-sm hover:bg-blue-50 transition"
+                        >
+                          Apply for this Address →
+                        </button>
+                        <button
+                          onClick={() => setCoverageResult(null)}
+                          className="rounded-lg bg-white/10 px-3 py-2 text-xs font-medium text-white hover:bg-white/20 transition"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ----------------- INTERACTIVE SIBAGAT MAP & ZONE EXPLORER ----------------- */}
+          <div className="reveal-scale mt-14 rounded-3xl border border-white/20 bg-slate-900/60 p-4 sm:p-7 backdrop-blur-md shadow-2xl">
+            <div className="flex flex-col lg:flex-row gap-6">
+              {/* Left / Top: Interactive Map View of Sibagat */}
+              <div className="lg:w-7/12 flex flex-col">
+                <div className="flex items-center justify-between pb-3 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="font-bold uppercase tracking-wider text-emerald-300">
+                      Live Fiber Grid: Sibagat, Agusan del Norte
+                    </span>
+                  </div>
+                  <span className="text-blue-200">Coords: 8.8211° N, 125.6980° E</span>
+                </div>
+
+                {/* Map Container */}
+                <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-inner">
+                  {/* Real OpenStreetMap centered on Sibagat, Agusan del Norte */}
+                  <iframe
+                    title="Sky-Tech Sibagat Fiber Coverage Map"
+                    width="100%"
+                    height="100%"
+                    className="border-0 w-full h-full"
+                    src="https://www.openstreetmap.org/export/embed.html?bbox=125.6400%2C8.7800%2C125.7600%2C8.8650&amp;layer=mapnik&amp;marker=8.8211%2C125.6980"
+                  />
+
+                  {/* Sky-Tech Central Station Overlay Badge */}
+                  <div className="absolute top-3 left-3 rounded-xl bg-slate-900/90 border border-sky-400/30 p-2.5 shadow-lg backdrop-blur-md text-left">
+                    <div className="flex items-center gap-2">
+                      <div className="grid h-6 w-6 place-items-center rounded-lg bg-[#0284c7] text-white">
+                        <Wifi size={13} />
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-black text-white leading-tight">Sky-Tech Central Hub</p>
+                        <p className="text-[9px] text-sky-300">Poblacion, Sibagat, Agusan</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Active Selected Zone Floating Card */}
+                  <div className="absolute bottom-3 right-3 left-3 sm:left-auto rounded-xl bg-slate-900/95 border border-white/20 p-3 shadow-xl backdrop-blur-md text-left max-w-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-white">{activeZone.name}</span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        activeZone.status === 'Active' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
+                      }`}>
+                        {activeZone.status}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-slate-300">
+                      {activeZone.coverage} · {activeZone.speed}
+                    </p>
+                    <button
+                      onClick={() => {
+                        setPrefilledBarangay(activeZone.name);
+                        setIsModalOpen(true);
+                      }}
+                      className="mt-2.5 w-full rounded-lg bg-[#0284c7] hover:bg-[#0369a1] py-1.5 text-center text-xs font-bold text-white transition shadow"
+                    >
+                      Apply for {activeZone.name} →
+                    </button>
+                  </div>
+                </div>
+
+                <p className="mt-2 text-right text-[11px] text-blue-200/70">
+                  <a
+                    href="https://www.openstreetmap.org/?mlat=8.8211&mlon=125.6980#map=13/8.8211/125.6980"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 hover:text-white transition"
+                  >
+                    View larger map on OpenStreetMap <ExternalLink size={12} />
+                  </a>
+                </p>
+              </div>
+
+              {/* Right / Bottom: Barangay Zones Selector */}
+              <div className="lg:w-5/12 flex flex-col justify-between">
+                <div>
+                  <h3 className="text-lg font-black text-white">Covered Barangays in Sibagat</h3>
+                  <p className="mt-1 text-xs text-blue-100">
+                    Click any barangay to inspect network status or apply for instant installation:
+                  </p>
+
+                  <div className="mt-4 grid grid-cols-2 gap-2 max-h-[320px] overflow-y-auto pr-1">
+                    {SIBAGAT_ZONES.map((zone) => {
+                      const isSelected = activeZone.name === zone.name;
+                      return (
+                        <button
+                          key={zone.name}
+                          type="button"
+                          onClick={() => {
+                            setActiveZone(zone);
+                            setPrefilledBarangay(zone.name);
+                          }}
+                          className={`rounded-xl p-2.5 text-left transition border ${
+                            isSelected
+                              ? 'bg-[#0284c7] border-white text-white shadow-lg'
+                              : 'bg-white/5 border-white/10 hover:bg-white/10 text-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-xs">{zone.name}</span>
+                            <span
+                              className={`h-2 w-2 rounded-full ${
+                                zone.status === 'Active' ? 'bg-emerald-400' : 'bg-amber-400'
+                              }`}
+                            />
+                          </div>
+                          <p className={`mt-1 text-[10px] ${isSelected ? 'text-blue-100' : 'text-slate-400'}`}>
+                            {zone.coverage}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Quick Apply Action Box */}
+                <div className="mt-5 rounded-2xl bg-white/10 border border-white/15 p-3.5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-white">Selected: {activeZone.name}</p>
+                      <p className="text-[11px] text-blue-200">{activeZone.note}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPrefilledBarangay(activeZone.name);
+                        setIsModalOpen(true);
+                      }}
+                      className="rounded-xl bg-white px-4 py-2 text-xs font-bold text-[#0284c7] shadow hover:bg-blue-50 transition active:scale-95"
+                    >
+                      Apply Now
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* -------------------- FOOTER (IMAGE 4) -------------------- */}
+      <footer id="local-support" className="bg-[#0b1120] text-slate-400 pt-16 pb-12 scroll-mt-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="reveal-on-scroll grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Column 1: Brand */}
+            <div>
+              <div className="flex items-center gap-3">
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#0284c7] text-white">
+                  <Wifi size={20} strokeWidth={2.4} />
+                </div>
+                <span className="text-lg font-black text-white">Sky-Tech ISP</span>
+              </div>
+              <p className="mt-4 text-xs leading-relaxed text-slate-400 sm:text-sm">
+                Providing fast, transparent, and ultra-reliable fiber internet for local homes and businesses in Sibagat and surrounding Agusan communities.
+              </p>
+            </div>
+
+            {/* Column 2: Fiber Internet */}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-white">FIBER INTERNET</p>
+              <ul className="mt-4 space-y-2.5 text-xs sm:text-sm">
+                <li>
+                  <a href="#fiber-plans" className="transition hover:text-white">
+                    Home Fiber Plans
+                  </a>
+                </li>
+                <li>
+                  <a href="#check-coverage" className="transition hover:text-white">
+                    Sibagat Coverage Map
+                  </a>
+                </li>
+                <li>
+                  <a href="#why-sky-tech" className="transition hover:text-white">
+                    Why Choose Fiber
+                  </a>
+                </li>
+                <li>
+                  <a href="#fiber-plans" className="transition hover:text-white">
+                    Speed Test Portal
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 3: Customer Support */}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-white">CUSTOMER SUPPORT</p>
+              <ul className="mt-4 space-y-2.5 text-xs sm:text-sm">
+                <li>
+                  <button onClick={onLogin} className="transition hover:text-white text-left">
+                    Subscriber Login
+                  </button>
+                </li>
+                <li>
+                  <button onClick={onLogin} className="transition hover:text-white text-left">
+                    Pay Bill Online
+                  </button>
+                </li>
+                <li>
+                  <a href="#why-sky-tech" className="transition hover:text-white">
+                    Help Center & FAQs
+                  </a>
+                </li>
+                <li>
+                  <a href="#check-coverage" className="transition hover:text-white">
+                    Network Status Page
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 4: Local Office (Sibagat) */}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-white">LOCAL OFFICE</p>
+              <ul className="mt-4 space-y-3 text-xs sm:text-sm">
+                <li className="flex items-center gap-2.5 text-slate-300">
+                  <MapPin size={16} className="text-[#0284c7] shrink-0" />
+                  <span>Poblacion, Sibagat, Agusan del Norte</span>
+                </li>
+                <li className="flex items-center gap-2.5 text-slate-300">
+                  <Mail size={16} className="text-[#0284c7] shrink-0" />
+                  <span>support@skytech-fiber.com</span>
+                </li>
+                <li className="flex items-center gap-2.5 text-slate-300">
+                  <Phone size={16} className="text-[#0284c7] shrink-0" />
+                  <span>Hotline: (085) 800-SKYTECH / 0917-123-4567</span>
+                </li>
+                <li className="pt-2 text-xs text-slate-400 leading-relaxed">
+                  Open Mon-Sat: 8:00 AM - 6:00 PM <br />
+                  24/7 Technical Dispatch in Sibagat Area
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Copyright & Legal Links */}
+          <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-slate-800/80 pt-8 text-xs text-slate-500 sm:flex-row">
+            <p>© 2026 Sky-Tech ISP Inc. All rights reserved.</p>
+            <div className="flex items-center gap-6">
+              <a href="#" className="hover:text-slate-400">Privacy Policy</a>
+              <a href="#" className="hover:text-slate-400">Terms of Service</a>
+              <a href="#" className="hover:text-slate-400">Fair Use Policy</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* -------------------- COMPACT APPLY MODAL (IMAGE 5) -------------------- */}
+      <BookingModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        initialPlan={selectedPlan}
+        initialAddress={prefilledAddress}
+        initialBarangay={prefilledBarangay}
+      />
+    </div>
   );
 }

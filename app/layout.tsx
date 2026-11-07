@@ -1,16 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/app/providers";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Sky-Tech ISP | Reliable connectivity",
   description: "Manage your Sky-Tech internet service in one place.",
+  icons: {
+    icon: "/images/Skytech.jpg",
+    shortcut: "/images/Skytech.jpg",
+    apple: "/images/Skytech.jpg",
+  },
 };
 
 export const viewport: Viewport = {
@@ -27,9 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${inter.variable} antialiased`}
-      >
+      <body className="antialiased font-sans">
         <Providers>{children}</Providers>
       </body>
     </html>

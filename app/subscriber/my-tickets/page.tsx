@@ -339,25 +339,24 @@ export default function MyTicketsPage() {
 
         {isFormOpen && (
           <div
-            className="modal-overlay fixed inset-0 z-50 flex items-end bg-slate-950/45"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-sm animate-in fade-in duration-200"
             onMouseDown={() => !isSubmitting && setIsFormOpen(false)}
           >
             <section
-              className="modal-panel max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 sm:p-6"
+              className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 sm:p-7 shadow-2xl border border-slate-100"
               onMouseDown={(event) => event.stopPropagation()}
             >
-              <div className="mx-auto mb-5 h-1 w-12 rounded-full bg-slate-200" />
-
-              <div className="flex items-start justify-between border-b border-slate-100 pb-5">
+              <div className="flex items-start justify-between border-b border-slate-100 pb-4">
                 <div>
-                  <h2 className="text-xl font-bold">New Support Request</h2>
-                  <p className="mt-1 text-sm text-slate-400">Tell us about your concern</p>
+                  <h2 className="text-xl font-bold text-slate-900">New Support Request</h2>
+                  <p className="mt-1 text-xs sm:text-sm text-slate-500">Tell us about your concern</p>
                 </div>
 
                 <button
+                  type="button"
                   aria-label="Close request form"
                   onClick={() => setIsFormOpen(false)}
-                  className="rounded-lg p-2 text-slate-500 transition-colors duration-150 hover:bg-[#f1f5f9]"
+                  className="rounded-xl p-1.5 text-slate-400 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
                 >
                   <X size={20} />
                 </button>
@@ -372,43 +371,43 @@ export default function MyTicketsPage() {
                         type="button"
                         key={value}
                         onClick={() => setType(value)}
-                        className={`flex items-center gap-3 rounded-xl border-2 p-3 text-left text-sm font-semibold transition-all duration-150 ${
-                          type === value ? 'border-[#6694ff] bg-blue-50 text-[#2166f3]' : 'border-slate-100 bg-slate-50 text-slate-500'
+                        className={`flex items-center gap-3 rounded-xl border-2 p-3 text-left text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer ${
+                          type === value ? 'border-[#6694ff] bg-blue-50 text-[#2166f3] shadow-sm' : 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'
                         }`}
                       >
-                        <Router size={18} />
-                        {label}
+                        <Router size={18} className="shrink-0" />
+                        <span>{label}</span>
                       </button>
                     ))}
                   </div>
                 </fieldset>
 
-                <label className="block text-sm font-semibold">
+                <label className="block text-xs sm:text-sm font-bold text-slate-700">
                   Subject *
                   <input
                     required
                     name="subject"
                     placeholder="Brief description of your concern"
-                    className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 font-normal outline-none"
+                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-normal text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                   />
                 </label>
 
-                <label className="block text-sm font-semibold">
+                <label className="block text-xs sm:text-sm font-bold text-slate-700">
                   Details *
                   <textarea
                     required
                     name="description"
-                    rows={5}
+                    rows={4}
                     placeholder="Describe the issue in detail"
-                    className="mt-2 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 font-normal outline-none"
+                    className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-normal text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                   />
                 </label>
 
-                {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
+                {error && <p className="text-xs sm:text-sm font-semibold text-red-600">{error}</p>}
 
                 <button
                   disabled={isSubmitting}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#2161f2] px-5 py-4 text-base font-bold text-white transition-colors duration-150 hover:bg-[#1652dc]"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3.5 text-sm sm:text-base font-bold text-white shadow-md shadow-blue-500/20 transition-all hover:bg-blue-700 active:scale-[0.99] disabled:opacity-75 cursor-pointer"
                 >
                   {isSubmitting && <Spinner />}
                   {isSubmitting ? 'Submitting...' : 'Submit Request'}

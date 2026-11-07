@@ -99,6 +99,7 @@ model User {
   email        String  @unique
   password     String
   role         Role
+  image        String?
   subscriberId String?
   technicianId String?
 }
@@ -115,6 +116,7 @@ model Subscriber {
   barangay       String?
   street         String?
   zipCode        String?
+  image          String?
   plan           Plan
   status         SubscriberStatus
   connectionDate DateTime
@@ -146,6 +148,9 @@ model Bill {
   status          BillStatus
   paymentMethod   String?
   referenceNumber String?
+  receiptImage    String?
+  paymentStatus   String?    @default("Unpaid")
+  paidAt          DateTime?
 }
 
 model Installation {
@@ -217,13 +222,47 @@ model Message {
 }
 
 model SystemSettings {
-  id              String @id @default("singleton")
-  companyName     String
-  companyEmail    String
-  phone           String
-  address         String
-  lateFeePercent  Float
-  gracePeriodDays Int
-  billingDay      Int
-  plans           Json
+  id                   String    @id @default("singleton")
+  companyName          String
+  companyEmail         String
+  phone                String
+  address              String
+  lateFeePercent       Float
+  gracePeriodDays      Int
+  billingDay           Int
+  plans                Json
+  maintenanceMode      Boolean   @default(false)
+  maintenanceType      String?   @default("Scheduled Maintenance")
+  maintenanceImpact    String?   @default("Slow_Internet")
+  maintenanceTitle     String?   @default("Network Maintenance Notice")
+  maintenanceMessage   String?   @default("We are conducting fiber optical network maintenance. Internet speeds may be degraded or temporarily unavailable.")
+  maintenanceStartTime DateTime?
+  maintenanceEndTime   DateTime?
+  maintenanceUpdatedAt DateTime?
+  smtpUser             String?
+  smtpPass             String?
+  smtpHost             String?
+  smtpPort             Int?
+}
+
+model MaintenanceLog {
+  id          String    @id @default(cuid())
+  type        String
+  impact      String
+  title       String
+  message     String
+  startTime   DateTime?
+  endTime     DateTime?
+  recipients  Int       @default(0)
+  sentBy      String?
+  createdAt   DateTime  @default(now())
+}
+
+model PasswordResetToken {
+  id        String    @id
+  tokenHash String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
 }

@@ -1,14 +1,43 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { Check, LoaderCircle, Plus, Save } from 'lucide-react';
+import { Check, Edit3, LoaderCircle, Plus, Save, Trash2, X } from 'lucide-react';
 import { PortalShell } from '@/app/components/PortalShell';
+import { DEFAULT_PLANS, DEFAULT_SETTINGS, PlanItem } from '@/app/api/settings/route';
 
-type Plan = { name: string; speedMbps: number; price: number };
-type Settings = { companyName: string; companyEmail: string; phone: string; address: string; lateFeePercent: number; gracePeriodDays: number; billingDay: number; plans: Plan[] };
-const blank: Settings = { companyName: '', companyEmail: '', phone: '', address: '', lateFeePercent: 0, gracePeriodDays: 0, billingDay: 1, plans: [] };
+type Plan = PlanItem;
 
-function normalizePlans(value: unknown): Plan[] { if (!Array.isArray(value)) return []; return value.map((plan: { name?: string; speedMbps?: number; speed?: string | number; price?: number }) => { const name = plan.name || ''; return { name, speedMbps: Number(plan.speedMbps || String(plan.speed ?? '').replace(/[^0-9.]/g, '') || name.match(/[0-9]+/)?.[0] || 0), price: Number(plan.price || 0) }; }); }
+type Settings = {
+  companyName: string;
+  companyEmail: string;
+  phone: string;
+  address: string;
+  lateFeePercent: number;
+  gracePeriodDays: number;
+  billingDay: number;
+  plans: Plan[];
+};
+
+const blank: Settings = {
+  ...DEFAULT_SETTINGS,
+};
+
+function normalizePlans(value: unknown): Plan[] {
+  if (!Array.isArray(value) || value.length === 0) return DEFAULT_PLANS;
+  return value.map((plan: { name?: string; speedMbps?: number; speed?: string | number; price?: number }) => {
+    const name = plan.name || '';
+    return {
+      name,
+      speedMbps: Number(
+        plan.speedMbps ||
+          String(plan.speed ?? '').replace(/[^0-9.]/g, '') ||
+          name.match(/[0-9]+/)?.[0] ||
+          0
+      ),
+      price: Number(plan.price || 0),
+    };
+  });
+}
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings>(blank);
@@ -19,13 +48,320 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => { fetch('/api/settings').then(async (response) => { const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Unable to load settings.'); if (result.data) setSettings({ ...blank, ...result.data, plans: normalizePlans(result.data.plans) }); }).catch((loadError) => setError(loadError instanceof Error ? loadError.message : 'Unable to load settings.')).finally(() => setLoading(false)); }, []);
-  function setField(field: keyof Omit<Settings, 'plans'>, value: string) { setSettings((current) => ({ ...current, [field]: ['lateFeePercent', 'gracePeriodDays', 'billingDay'].includes(field) ? Number(value) : value })); setSaved(false); }
-  function savePlanDraft(event: FormEvent<HTMLFormElement>) { event.preventDefault(); if (!planDraft) return; setSettings((current) => ({ ...current, plans: planIndex === null ? [...current.plans, planDraft] : current.plans.map((plan, index) => index === planIndex ? planDraft : plan) })); setPlanDraft(null); setPlanIndex(null); setSaved(false); }
-  function openNewPlan() { setPlanIndex(null); setPlanDraft({ name: '', speedMbps: 0, price: 0 }); }
-  function openEditPlan(plan: Plan, index: number) { setPlanIndex(index); setPlanDraft({ ...plan }); }
-  async function save(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setSaving(true); setSaved(false); setError(''); try { const response = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) }); const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Unable to save settings.'); setSettings({ ...settings, ...result.data, plans: normalizePlans(result.data?.plans || settings.plans) }); setSaved(true); } catch (saveError) { setError(saveError instanceof Error ? saveError.message : 'Unable to save settings.'); } finally { setSaving(false); } }
-  const textField = (label: string, name: keyof Omit<Settings, 'plans'>, type = 'text') => <label className="text-xs font-bold uppercase tracking-wide text-slate-500">{label}<input type={type} value={settings[name] as string | number} onChange={(event) => setField(name, event.target.value)} required className="mt-2 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-normal normal-case tracking-normal outline-none focus:border-[#3b4fd8]" /></label>;
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Unable to load settings.');
+        if (result.data) {
+          setSettings({
+            ...blank,
+            ...result.data,
+            plans: normalizePlans(result.data.plans),
+          });
+        }
+      })
+      .catch((loadError) =>
+        setError(loadError instanceof Error ? loadError.message : 'Unable to load settings.')
+      )
+      .finally(() => setLoading(false));
+  }, []);
 
-  return <PortalShell role="admin"><div className="max-w-6xl"><h1 className="text-2xl font-bold tracking-tight">Settings</h1><p className="mt-1 text-sm text-slate-500">Manage company information, billing rules, and internet plans.</p>{loading ? <div className="mt-7 flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500"><LoaderCircle className="animate-spin" size={18} />Loading settings...</div> : <form onSubmit={save} className="mt-7 space-y-5"><section className="overflow-hidden rounded-xl border border-slate-200 bg-white"><div className="border-b border-slate-100 px-6 py-5"><h2 className="font-bold">Company Information</h2></div><div className="grid gap-5 p-6 sm:grid-cols-2">{textField('Company name', 'companyName')}{textField('Company email', 'companyEmail', 'email')}{textField('Phone', 'phone')}{textField('Address', 'address')}</div></section><section className="overflow-hidden rounded-xl border border-slate-200 bg-white"><div className="border-b border-slate-100 px-6 py-5"><h2 className="font-bold">Billing Rules</h2></div><div className="grid gap-5 p-6 sm:grid-cols-3">{textField('Late fee (%)', 'lateFeePercent', 'number')}{textField('Grace period (days)', 'gracePeriodDays', 'number')}{textField('Billing day', 'billingDay', 'number')}</div></section><section className="overflow-hidden rounded-xl border border-slate-200 bg-white"><div className="flex items-center justify-between border-b border-slate-100 px-6 py-5"><div><h2 className="font-bold">Internet Plans</h2><p className="mt-1 text-sm text-slate-400">Manage available internet plans.</p></div><button type="button" onClick={openNewPlan} className="admin-add-plan-button inline-flex items-center gap-2 rounded-full bg-[#3b4fd8] px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-[#2d3fc7]"><Plus size={17} />Add plan</button></div><div className="overflow-x-auto"><table className="w-full min-w-[680px] text-left"><thead className="border-b border-slate-100 bg-slate-50 text-xs font-bold uppercase tracking-wide text-slate-400"><tr><th className="px-6 py-4">Plan Name</th><th className="px-6 py-4">Speed (Mbps)</th><th className="px-6 py-4">Price / Month</th><th className="px-6 py-4">Actions</th></tr></thead><tbody>{settings.plans.map((plan, index) => <tr className="border-b border-slate-100 last:border-0" key={`${plan.name}-${index}`}><td className="px-6 py-4 text-sm font-semibold text-slate-700">{plan.name}</td><td className="px-6 py-4 text-sm text-slate-600">{plan.speedMbps}</td><td className="px-6 py-4 text-sm text-slate-600">₱{plan.price.toLocaleString()}</td><td className="px-6 py-4"><div className="flex gap-2"><button type="button" onClick={() => openEditPlan(plan, index)} className="text-sm font-semibold text-[#2166f3]">Edit</button><button type="button" onClick={() => { if (window.confirm(`Delete ${plan.name}?`)) setSettings((current) => ({ ...current, plans: current.plans.filter((_, planIndex) => planIndex !== index) })); }} className="text-sm font-semibold text-red-500">Delete</button></div></td></tr>)}</tbody></table></div></section>{error && <p className="text-sm font-semibold text-red-600">{error}</p>}<div className="flex justify-end"><button type="submit" disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-[#2f68e6] px-5 py-3 text-sm font-bold text-white">{saved ? <Check size={17} /> : <Save size={17} />}{saving ? 'Saving...' : saved ? 'Saved' : 'Save settings'}</button></div></form>}{planDraft && <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-5" onMouseDown={() => setPlanDraft(null)}><form onSubmit={savePlanDraft} onMouseDown={(event) => event.stopPropagation()} className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"><div className="flex items-center justify-between border-b border-slate-100 px-7 py-6"><h2 className="text-2xl font-bold">{planIndex === null ? 'Add Plan' : 'Edit Plan'}</h2><button type="button" aria-label="Close" onClick={() => setPlanDraft(null)} className="p-2 text-2xl text-slate-400">×</button></div><div className="grid gap-5 px-7 py-6"><label className="text-xs font-bold uppercase tracking-wide text-slate-500">Plan Name<input autoFocus required value={planDraft.name} onChange={(event) => setPlanDraft({ ...planDraft, name: event.target.value })} className="mt-2 h-14 w-full rounded-xl border border-slate-200 px-4 text-base font-normal normal-case tracking-normal outline-none focus:border-[#3b4fd8]" /></label><label className="text-xs font-bold uppercase tracking-wide text-slate-500">Speed (Mbps)<input required min="1" type="number" value={planDraft.speedMbps || ''} onChange={(event) => setPlanDraft({ ...planDraft, speedMbps: Number(event.target.value) })} className="mt-2 h-14 w-full rounded-xl border border-slate-200 px-4 py-3 text-base font-normal normal-case tracking-normal outline-none focus:border-[#3b4fd8]" /></label><label className="text-xs font-bold uppercase tracking-wide text-slate-500">Price / Month<input required min="0" type="number" value={planDraft.price || ''} onChange={(event) => setPlanDraft({ ...planDraft, price: Number(event.target.value) })} className="mt-2 h-14 w-full rounded-xl border border-slate-200 px-4 py-3 text-base font-normal normal-case tracking-normal outline-none focus:border-[#3b4fd8]" /></label></div><div className="flex justify-end gap-3 border-t border-slate-100 px-7 py-5"><button type="button" onClick={() => setPlanDraft(null)} className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600">Cancel</button><button type="submit" className="rounded-xl bg-[#2f68e6] px-5 py-3 text-sm font-bold text-white">{planIndex === null ? 'Add Plan' : 'Save Changes'}</button></div></form></div>}</div></PortalShell>;
+  function setField(field: keyof Omit<Settings, 'plans'>, value: string) {
+    setSettings((current) => ({
+      ...current,
+      [field]: ['lateFeePercent', 'gracePeriodDays', 'billingDay'].includes(field)
+        ? Number(value)
+        : value,
+    }));
+    setSaved(false);
+  }
+
+  function savePlanDraft(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!planDraft) return;
+    setSettings((current) => ({
+      ...current,
+      plans:
+        planIndex === null
+          ? [...current.plans, planDraft]
+          : current.plans.map((plan, index) => (index === planIndex ? planDraft : plan)),
+    }));
+    setPlanDraft(null);
+    setPlanIndex(null);
+    setSaved(false);
+  }
+
+  function openNewPlan() {
+    setPlanIndex(null);
+    setPlanDraft({ name: '', speedMbps: 100, price: 999 });
+  }
+
+  function openEditPlan(plan: Plan, index: number) {
+    setPlanIndex(index);
+    setPlanDraft({ ...plan });
+  }
+
+  async function save(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSaving(true);
+    setSaved(false);
+    setError('');
+    try {
+      const response = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Unable to save settings.');
+      setSettings({
+        ...settings,
+        ...result.data,
+        plans: normalizePlans(result.data?.plans || settings.plans),
+      });
+      setSaved(true);
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Unable to save settings.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const textField = (label: string, name: keyof Omit<Settings, 'plans'>, type = 'text') => (
+    <label className="text-xs font-bold uppercase tracking-wide text-slate-500">
+      {label}
+      <input
+        type={type}
+        value={settings[name] as string | number}
+        onChange={(event) => setField(name, event.target.value)}
+        required
+        className="mt-2 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-normal normal-case tracking-normal outline-none focus:border-[#3b4fd8]"
+      />
+    </label>
+  );
+
+  return (
+    <PortalShell role="admin">
+      <div className="max-w-6xl pb-12">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Settings</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Manage company information, billing rules, and internet plans displayed on the website.
+        </p>
+
+        {loading ? (
+          <div className="mt-7 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
+            <LoaderCircle className="animate-spin text-blue-600" size={18} />
+            Loading settings...
+          </div>
+        ) : (
+          <form onSubmit={save} className="mt-7 space-y-6">
+            {/* Company Info */}
+            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-100 px-6 py-4">
+                <h2 className="font-bold text-slate-900">Company Information</h2>
+              </div>
+              <div className="grid gap-5 p-6 sm:grid-cols-2">
+                {textField('Company name', 'companyName')}
+                {textField('Company email', 'companyEmail', 'email')}
+                {textField('Phone', 'phone')}
+                {textField('Address', 'address')}
+              </div>
+            </section>
+
+            {/* Billing Rules */}
+            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-100 px-6 py-4">
+                <h2 className="font-bold text-slate-900">Billing Rules</h2>
+              </div>
+              <div className="grid gap-5 p-6 sm:grid-cols-3">
+                {textField('Late fee (%)', 'lateFeePercent', 'number')}
+                {textField('Grace period (days)', 'gracePeriodDays', 'number')}
+                {textField('Billing day', 'billingDay', 'number')}
+              </div>
+            </section>
+
+            {/* Internet Plans */}
+            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 px-6 py-5">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">Internet Plans</h2>
+                  <p className="mt-0.5 text-xs sm:text-sm text-slate-400">
+                    Manage available internet plans. These plans are dynamically displayed on the landing page and booking form.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={openNewPlan}
+                  className="admin-add-plan-button inline-flex items-center gap-2 rounded-xl bg-[#2563eb] px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-[#1d4ed8] active:scale-95 transition"
+                >
+                  <Plus size={17} />
+                  Add plan
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[680px] text-left">
+                  <thead className="border-b border-slate-100 bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-400">
+                    <tr>
+                      <th className="px-6 py-3.5">Plan Name</th>
+                      <th className="px-6 py-3.5">Speed (Mbps)</th>
+                      <th className="px-6 py-3.5">Price / Month</th>
+                      <th className="px-6 py-3.5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {settings.plans.map((plan, index) => (
+                      <tr className="hover:bg-slate-50/70 transition" key={`${plan.name}-${index}`}>
+                        <td className="px-6 py-4 text-sm font-bold text-slate-800">{plan.name}</td>
+                        <td className="px-6 py-4 text-sm text-slate-600 font-medium">
+                          {plan.speedMbps} Mbps
+                        </td>
+                        <td className="px-6 py-4 text-sm font-semibold text-[#0284c7]">
+                          ₱{plan.price.toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-3">
+                            <button
+                              type="button"
+                              onClick={() => openEditPlan(plan, index)}
+                              className="inline-flex items-center gap-1 text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8] hover:underline"
+                            >
+                              <Edit3 size={15} />
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (window.confirm(`Delete ${plan.name}?`)) {
+                                  setSettings((current) => ({
+                                    ...current,
+                                    plans: current.plans.filter((_, planIndex) => planIndex !== index),
+                                  }));
+                                  setSaved(false);
+                                }
+                              }}
+                              className="inline-flex items-center gap-1 text-sm font-semibold text-rose-500 hover:text-rose-700 hover:underline"
+                            >
+                              <Trash2 size={15} />
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {error && (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-600">
+                {error}
+              </div>
+            )}
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={saving}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#2563eb] px-6 py-3 text-sm font-bold text-white shadow-md shadow-blue-500/20 hover:bg-[#1d4ed8] active:scale-95 transition"
+              >
+                {saved ? <Check size={18} /> : <Save size={18} />}
+                {saving ? 'Saving...' : saved ? 'Saved' : 'Save settings'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Modal for Add / Edit Plan */}
+        {planDraft && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm"
+            onMouseDown={() => setPlanDraft(null)}
+          >
+            <form
+              onSubmit={savePlanDraft}
+              onMouseDown={(event) => event.stopPropagation()}
+              className="w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl animate-in zoom-in-95 fade-in duration-200"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 px-7 py-5">
+                <h2 className="text-xl font-black text-slate-900">
+                  {planIndex === null ? 'Add Internet Plan' : 'Edit Internet Plan'}
+                </h2>
+                <button
+                  type="button"
+                  aria-label="Close"
+                  onClick={() => setPlanDraft(null)}
+                  className="grid h-8 w-8 place-items-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="grid gap-5 px-7 py-6">
+                <label className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                  Plan Name *
+                  <input
+                    autoFocus
+                    required
+                    placeholder="e.g. Fiber 100 Mbps"
+                    value={planDraft.name}
+                    onChange={(event) => setPlanDraft({ ...planDraft, name: event.target.value })}
+                    className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-normal outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-blue-100"
+                  />
+                </label>
+
+                <label className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                  Speed (Mbps) *
+                  <input
+                    required
+                    min="1"
+                    type="number"
+                    placeholder="100"
+                    value={planDraft.speedMbps || ''}
+                    onChange={(event) =>
+                      setPlanDraft({ ...planDraft, speedMbps: Number(event.target.value) })
+                    }
+                    className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-normal outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-blue-100"
+                  />
+                </label>
+
+                <label className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                  Price / Month (₱) *
+                  <input
+                    required
+                    min="0"
+                    type="number"
+                    placeholder="999"
+                    value={planDraft.price || ''}
+                    onChange={(event) =>
+                      setPlanDraft({ ...planDraft, price: Number(event.target.value) })
+                    }
+                    className="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-normal outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-blue-100"
+                  />
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-3 border-t border-slate-100 bg-slate-50 px-7 py-4">
+                <button
+                  type="button"
+                  onClick={() => setPlanDraft(null)}
+                  className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-xl bg-[#2563eb] px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-blue-500/20 hover:bg-[#1d4ed8]"
+                >
+                  {planIndex === null ? 'Add Plan' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+      </div>
+    </PortalShell>
+  );
 }

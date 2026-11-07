@@ -1,129 +1,386 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { DEMO_ACCOUNTS, type DemoRole } from '@/app/lib/demo-accounts';
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  LogIn,
+  BookOpen,
+  X,
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
+} from 'lucide-react';
+import { Spinner } from '@/app/components/Spinner';
+import { DEMO_ACCOUNTS } from '@/app/lib/demo-accounts';
+
+type MaintenanceInfo = {
+  maintenanceMode: boolean;
+  maintenanceType?: string;
+  maintenanceImpact?: string;
+  maintenanceTitle?: string;
+  maintenanceMessage?: string;
+  maintenanceEndTime?: string | null;
+};
 
 type LoginProps = {
   onBooking: () => void;
   onBack?: () => void;
 };
 
-function Icon({ name, size = 19 }: { name: 'wifi' | 'mail' | 'lock' | 'eye' | 'eyeOff' | 'arrow' | 'user' | 'wrench' | 'shield' | 'alert'; size?: number }) {
-  const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true };
-  if (name === 'wifi') return <svg {...common}><path d="M2.5 8.5a15.5 15.5 0 0 1 19 0M5.5 12a10.7 10.7 0 0 1 13 0M8.8 15.5a5.8 5.8 0 0 1 6.4 0" /><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none" /></svg>;
-  if (name === 'mail') return <svg {...common}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m4 7 8 6 8-6" /></svg>;
-  if (name === 'lock') return <svg {...common}><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>;
-  if (name === 'eye' || name === 'eyeOff') return <svg {...common}>{name === 'eye' ? <><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" /><circle cx="12" cy="12" r="2.5" /></> : <><path d="m3 3 18 18M10.6 6.2A10.5 10.5 0 0 1 12 6c6.5 0 10 6 10 6a18 18 0 0 1-3.1 3.7M6.2 6.3C3.4 8.1 2 12 2 12s3.5 6 10 6a9.8 9.8 0 0 0 3.2-.5" /></>}</svg>;
-  if (name === 'arrow') return <svg {...common}><path d="M5 12h13M13 6l6 6-6 6" /></svg>;
-  if (name === 'user') return <svg {...common}><circle cx="12" cy="8" r="3" /><path d="M5 20a7 7 0 0 1 14 0" /></svg>;
-  if (name === 'wrench') return <svg {...common}><path d="m14.7 6.3 3-3a5 5 0 0 0-6.4 6.4l-7.8 7.8a2 2 0 0 0 2.8 2.8l7.8-7.8a5 5 0 0 0 6.4-6.4l-3 3-2.8-.8-.8-2.8Z" /></svg>;
-  if (name === 'shield') return <svg {...common}><path d="M12 3 20 6v5c0 5-3.4 8.2-8 10-4.6-1.8-8-5-8-10V6l8-3Z" /><path d="m8.5 12 2.3 2.3 4.8-4.8" /></svg>;
-  return <svg {...common}><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" /></svg>;
-}
-
-const roles: Array<{ id: DemoRole; label: string; icon: 'shield' | 'wrench' | 'user'; color: string }> = [
-  { id: 'admin', label: 'Administrator', icon: 'shield', color: 'blue' },
-  { id: 'technician', label: 'Technician', icon: 'wrench', color: 'amber' },
-  { id: 'subscriber', label: 'Subscriber', icon: 'user', color: 'emerald' },
-];
-
 export function Login({ onBooking }: LoginProps) {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState<DemoRole | null>(null);
+  const [keepSignedIn, setKeepSignedIn] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [maintenance, setMaintenance] = useState<MaintenanceInfo | null>(null);
+
+  useEffect(() => {
+    fetch('/api/maintenance')
+      .then((res) => res.json())
+      .then((result) => {
+        if (result?.data?.maintenanceMode) {
+          setMaintenance(result.data);
+        }
+      })
+      .catch(() => undefined);
+  }, []);
+
   const [isRecoveryOpen, setIsRecoveryOpen] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [recoverySent, setRecoverySent] = useState(false);
-  const [isSigningIn, setIsSigningIn] = useState(false);
-
-  function selectRole(role: DemoRole) {
-    const account = DEMO_ACCOUNTS[role];
-    setSelectedRole(role);
-    setEmail(account.email);
-    setPassword(account.password);
-    setError('');
-  }
-
-  async function loginAs(nextEmail: string, nextPassword: string) {
-    setError('');
-    setIsSigningIn(true);
-    const result = await signIn('credentials', { email: nextEmail, password: nextPassword, redirect: false });
-    if (result?.error) {
-      setError('The email or password you entered is incorrect.');
-      setIsSigningIn(false);
-      return;
-    }
-    const account = Object.values(DEMO_ACCOUNTS).find((item) => item.email === nextEmail);
-    const role = account?.role || (nextEmail.startsWith('admin') ? 'admin' : nextEmail.startsWith('tech') ? 'technician' : 'subscriber');
-    router.replace(role === 'admin' ? '/admin/dashboard' : role === 'technician' ? '/technician/my-tasks' : '/subscriber/my-account');
-  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await loginAs(email, password);
+    setError('');
+    setIsSigningIn(true);
+
+    try {
+      const cleanEmail = email.trim();
+      const result = await signIn('credentials', {
+        email: cleanEmail,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        if (
+          maintenance?.maintenanceMode &&
+          !cleanEmail.toLowerCase().includes('admin') &&
+          !cleanEmail.toLowerCase().includes('tech')
+        ) {
+          setError(
+            `Subscriber login is temporarily paused due to active network maintenance: ${
+              maintenance.maintenanceTitle || 'Scheduled Maintenance'
+            } (${(maintenance.maintenanceImpact || 'Slow Internet').replace(/_/g, ' ')}). Please check your registered email for details.`
+          );
+        } else {
+          setError('The email or password you entered is incorrect.');
+        }
+        setIsSigningIn(false);
+        return;
+      }
+
+      // Check session role for accurate redirect
+      try {
+        const sessionRes = await fetch('/api/auth/session');
+        const sessionData = await sessionRes.json();
+        const role = sessionData?.user?.role;
+        if (role === 'admin') {
+          router.replace('/admin/dashboard');
+          return;
+        } else if (role === 'technician') {
+          router.replace('/technician/my-tasks');
+          return;
+        } else if (role === 'subscriber') {
+          router.replace('/subscriber/my-account');
+          return;
+        }
+      } catch {
+        // Fallback
+      }
+
+      const matchedAccount = Object.values(DEMO_ACCOUNTS).find(
+        (acc) => acc.email.toLowerCase() === cleanEmail.toLowerCase()
+      );
+      const userRole =
+        matchedAccount?.role ||
+        (cleanEmail.includes('admin')
+          ? 'admin'
+          : cleanEmail.includes('tech')
+          ? 'technician'
+          : 'subscriber');
+
+      if (userRole === 'admin') {
+        router.replace('/admin/dashboard');
+      } else if (userRole === 'technician') {
+        router.replace('/technician/my-tasks');
+      } else {
+        router.replace('/subscriber/my-account');
+      }
+    } catch {
+      setError('An unexpected error occurred. Please try again.');
+      setIsSigningIn(false);
+    }
   }
 
   return (
-    <main className="relative flex min-h-screen overflow-hidden bg-[#071329] px-4 py-6 text-slate-900 sm:px-8 sm:py-8">
-      <div className="pointer-events-none absolute inset-0 opacity-30" style={{ backgroundImage: 'linear-gradient(rgba(94,145,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(94,145,255,.08) 1px, transparent 1px)', backgroundSize: '54px 54px' }} />
-      <div className="pointer-events-none absolute -left-40 -top-40 h-[32rem] w-[32rem] rounded-full bg-blue-600/25 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-48 -right-32 h-[32rem] w-[32rem] rounded-full bg-indigo-600/20 blur-3xl" />
-      <svg className="pointer-events-none absolute inset-0 hidden h-full w-full opacity-50 lg:block" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true"><path d="M-40 720C230 560 290 820 530 650S840 210 1120 390s190 80 360-40" stroke="#2563eb" strokeOpacity=".25" strokeWidth="2" fill="none" /><path d="M-20 170C280 370 380 40 650 230s370 420 800 250" stroke="#7896e8" strokeOpacity=".18" strokeWidth="1.5" strokeDasharray="8 12" fill="none" /><circle cx="530" cy="650" r="5" fill="#60a5fa" /><circle cx="1120" cy="390" r="5" fill="#818cf8" /><circle cx="650" cy="230" r="4" fill="#60a5fa" /></svg>
-
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col">
-        <header className="flex items-center"><Link href="/landing-page" className="flex items-center gap-3 text-white" aria-label="Return to Sky-Tech landing page"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#2452c7] text-white shadow-lg shadow-blue-950/40"><Icon name="wifi" size={23} /></span><span><span className="block text-lg font-extrabold tracking-tight">Sky-Tech</span><span className="block text-[10px] font-bold uppercase tracking-[.2em] text-blue-300">ISP Portal</span></span></Link></header>
-        <div className="flex flex-1 items-center justify-center py-8 sm:py-12">
-          <section className="w-full max-w-[460px] rounded-3xl border border-white/70 bg-white px-5 py-7 shadow-2xl shadow-black/30 sm:px-10 sm:py-9" aria-labelledby="login-title">
-            <div className="text-center"><div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-[#2452c7] text-white shadow-lg shadow-blue-200"><Icon name="wifi" size={30} /></div><h1 id="login-title" className="mt-5 text-3xl font-black tracking-tight text-[#071329]">Welcome back</h1><p className="mt-2 text-sm text-slate-500">Sign in to manage your Sky-Tech account.</p></div>
-            <form onSubmit={submit} className="mt-8 space-y-5">
-              <label htmlFor="email" className="block text-sm font-bold text-slate-700">Email address<div className={`mt-2 flex h-12 items-center overflow-hidden rounded-xl border bg-white px-3 transition focus-within:ring-2 focus-within:ring-blue-100 ${error ? 'border-red-300' : 'border-slate-200 focus-within:border-[#2452c7]'}`}><span className="shrink-0 text-slate-400"><Icon name="mail" /></span><input id="email" name="email" type="email" value={email} onChange={(event) => { setEmail(event.target.value); setSelectedRole(null); }} required autoComplete="email" placeholder="you@skytech.net" className="min-w-0 flex-1 appearance-none !border-0 bg-transparent px-3 text-sm text-slate-900 !outline-none !ring-0 !shadow-none placeholder:text-slate-400 focus:!border-0 focus:!outline-none focus:!ring-0 focus:!shadow-none" /></div></label>
-              <label htmlFor="password" className="block text-sm font-bold text-slate-700">Password<div className={`mt-2 flex h-12 items-center overflow-hidden rounded-xl border bg-white px-3 transition focus-within:ring-2 focus-within:ring-blue-100 ${error ? 'border-red-300' : 'border-slate-200 focus-within:border-[#2452c7]'}`}><span className="shrink-0 text-slate-400"><Icon name="lock" /></span><input id="password" name="password" type="text" value={password} onChange={(event) => { setPassword(event.target.value); setSelectedRole(null); }} required autoComplete="current-password" placeholder="Enter your password" className={`min-w-0 flex-1 appearance-none !border-0 bg-transparent px-3 text-sm text-slate-900 !outline-none !ring-0 !shadow-none placeholder:text-slate-400 focus:!border-0 focus:!outline-none focus:!ring-0 focus:!shadow-none ${showPassword ? '' : 'password-mask'}`} /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="shrink-0 !border-0 !bg-transparent !p-1 !shadow-none text-slate-400 transition hover:text-[#2452c7] focus:!border-0 focus:!outline-none focus:!ring-0 focus:!shadow-none"><Icon name={showPassword ? 'eyeOff' : 'eye'} /></button></div></label>
-              <div className="flex justify-end"><button type="button" onClick={() => { setRecoveryEmail(email); setRecoverySent(false); setIsRecoveryOpen(true); }} className="text-sm font-bold text-[#2452c7] hover:underline">Forgot password?</button></div>
-              {error && <div role="alert" className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-semibold text-red-700"><Icon name="alert" size={18} /> <span>{error}</span></div>}
-              <button type="submit" disabled={isSigningIn} className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#2452c7] px-5 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-[#1d43aa] focus:outline-none focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60">{isSigningIn ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />Signing in...</> : 'Sign in'}</button>
-            </form>
-            <div className="my-7 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[.16em] text-slate-400"><span className="h-px flex-1 bg-slate-200" />Quick demo access<span className="h-px flex-1 bg-slate-200" /></div>
-            <div className="grid grid-cols-3 gap-2">{roles.map((role) => <button key={role.id} type="button" onClick={() => selectRole(role.id)} className={`flex min-h-[72px] flex-col items-center justify-center gap-1 rounded-xl border px-1 text-center text-[11px] font-bold transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-200 ${selectedRole === role.id ? 'border-[#2452c7] bg-blue-50 text-[#2452c7]' : 'border-slate-200 bg-white text-slate-500'}`}><span className={role.color === 'amber' ? 'text-amber-500' : role.color === 'emerald' ? 'text-emerald-500' : 'text-[#2452c7]'}><Icon name={role.icon} size={20} /></span>{role.label}</button>)}</div>
-            <p className="mt-7 text-center text-sm text-slate-500">New to Sky-Tech? <button type="button" onClick={onBooking} className="font-bold text-[#2452c7] hover:underline">Book now</button></p>
-          </section>
-        </div>
-        <footer className="pb-2 text-center text-xs font-semibold text-blue-100/45">© 2026 Sky-Tech ISP. Secure account access.</footer>
+    <main className="min-h-screen bg-slate-100/90 flex flex-col justify-center items-center p-4 sm:p-6 selection:bg-[#0284c7] selection:text-white">
+      {/* Back to Home Header */}
+      <div className="w-full max-w-[420px] mb-3 flex items-center justify-between">
+        <Link
+          href="/"
+          className="text-xs font-bold text-slate-500 hover:text-slate-800 transition flex items-center gap-1.5"
+        >
+          ← Return to Home
+        </Link>
+        <span className="text-xs font-semibold text-slate-400">Sibagat, Agusan del Norte</span>
       </div>
-      {isRecoveryOpen && <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/70 p-4" role="dialog" aria-modal="true" aria-labelledby="recovery-title">
-        <div className="w-full max-w-[460px] overflow-hidden rounded-3xl bg-white shadow-2xl">
-          {!recoverySent && <div className="flex items-start justify-between border-b border-slate-100 px-6 py-5 sm:px-7">
-            <div className="flex items-start gap-4">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-[#2452c7]"><Icon name="mail" size={21} /></span>
-              <div><h2 id="recovery-title" className="text-lg font-black tracking-tight text-[#172238]">Reset your password</h2><p className="mt-1 text-sm text-slate-500">We&apos;ll send you a secure recovery link.</p></div>
-            </div>
-            <button type="button" onClick={() => setIsRecoveryOpen(false)} aria-label="Close password reset dialog" className="text-3xl font-light leading-none text-slate-400 hover:text-slate-600">&times;</button>
-          </div>}
-          {recoverySent ? <div className="px-6 py-7 text-center sm:px-7">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-emerald-50 text-emerald-600"><Icon name="mail" size={26} /></span>
-            <h2 id="recovery-title" className="mt-5 text-xl font-black tracking-tight text-[#172238]">Check your inbox</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-500">If an account exists for <strong className="font-bold text-slate-700">{recoveryEmail}</strong>, you&apos;ll receive a password reset link shortly.</p>
-            <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-left text-sm leading-6 text-[#2452c7]">Didn&apos;t receive it? Check your spam folder or wait a minute before trying again.</div>
-            <button type="button" onClick={() => setIsRecoveryOpen(false)} className="mt-5 h-14 w-full rounded-2xl bg-[#2d59ca] text-sm font-bold text-white shadow-xl shadow-blue-200 transition hover:bg-[#244db8]">Back to sign in</button>
-            <button type="button" onClick={() => setRecoverySent(false)} className="mt-4 block w-full text-center text-sm font-bold text-slate-500 hover:text-slate-700">Use a different email</button>
-          </div> : <form onSubmit={(event) => { event.preventDefault(); setRecoverySent(true); }} className="px-6 py-6 sm:px-7">
-            <p className="text-sm leading-6 text-slate-500">Enter the email connected to your Sky-Tech account. For your security, the reset link will expire after 30 minutes.</p>
-            <label htmlFor="recovery-email" className="mt-6 block text-sm font-bold text-slate-600">Account email<div className="mt-2 flex h-14 items-center rounded-2xl border-2 border-[#3b70ef] bg-white px-3 shadow-[0_0_0_4px_rgba(59,112,239,0.12)]"><span className="shrink-0 text-slate-400"><Icon name="mail" size={19} /></span><input id="recovery-email" type="email" value={recoveryEmail} onChange={(event) => setRecoveryEmail(event.target.value)} required autoFocus placeholder="you@skytech.net" className="min-w-0 flex-1 !border-0 bg-transparent px-3 text-sm text-slate-900 !outline-none !shadow-none placeholder:text-slate-300 focus:!border-0 focus:!outline-none focus:!ring-0 focus:!shadow-none" /></div></label>
-            <button type="submit" className="mt-6 h-14 w-full rounded-2xl bg-[#2d59ca] text-sm font-bold text-white shadow-xl shadow-blue-200 transition hover:bg-[#244db8]">Send reset link</button>
-            <button type="button" onClick={() => setIsRecoveryOpen(false)} className="mt-4 block w-full text-center text-sm font-bold text-slate-500 hover:text-slate-700">Cancel</button>
-          </form>}
+
+      {/* Main Card (Matches screenshot exactly) */}
+      <div className="w-full max-w-[420px] rounded-3xl border border-blue-100/90 bg-white p-7 sm:p-8 shadow-2xl transition-all relative overflow-hidden bg-[radial-gradient(ellipse_at_top,_rgba(2,132,199,0.06),_transparent_70%)]">
+        {/* Brand Logo */}
+        <div className="flex justify-center mb-3">
+          <div className="h-12 w-12 overflow-hidden rounded-full border-2 border-sky-400 bg-[#071329] shadow-sm">
+            <Image
+              src="/images/Skytech.jpg"
+              alt="Sky-Tech Logo"
+              width={48}
+              height={48}
+              className="h-full w-full object-cover rounded-full scale-110"
+              priority
+            />
+          </div>
         </div>
-      </div>}
+
+        {/* Title & Subtitle */}
+        <div className="text-center">
+          <h1 className="text-2xl sm:text-[26px] font-black text-[#0f172a] tracking-tight">
+            Welcome back
+          </h1>
+          <p className="mt-1 text-xs text-slate-500">
+            Enter your credentials to access your account.
+          </p>
+          {/* Blue accent pill line */}
+          <div className="mx-auto mt-2.5 h-1 w-14 rounded-full bg-gradient-to-r from-sky-400 to-blue-600" />
+        </div>
+
+        {/* Active Maintenance Notice */}
+        {maintenance?.maintenanceMode && (
+          <div className="mt-4 rounded-2xl bg-amber-50 border border-amber-200/90 p-3.5 text-left animate-in fade-in">
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-900">
+              <AlertTriangle size={15} className="text-amber-600 shrink-0" />
+              <span>Network Maintenance In Progress</span>
+            </div>
+            <p className="mt-1 text-xs text-amber-800 leading-snug">
+              <strong>{maintenance.maintenanceTitle}</strong> (
+              {(maintenance.maintenanceImpact || 'Slow Internet').replace(/_/g, ' ')})
+            </p>
+            <p className="mt-1 text-[11px] text-amber-700/90">
+              Subscriber logins are temporarily paused during maintenance. All registered subscriber emails have been sent the official announcement.
+            </p>
+          </div>
+        )}
+
+        {/* Form */}
+        <form onSubmit={submit} className="mt-6 space-y-4">
+          {/* Email or Account ID */}
+          <div>
+            <label className="flex items-center gap-1.5 text-xs font-bold text-[#0f172a] mb-1.5">
+              <Mail size={15} className="text-[#0f172a]" />
+              <span>Email or Account ID</span>
+            </label>
+            <div className="flex items-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 transition focus-within:border-[#0284c7] focus-within:ring-2 focus-within:ring-sky-100">
+              <Mail size={16} className="mr-2.5 shrink-0 text-slate-400" />
+              <input
+                type="text"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email or account ID"
+                style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
+                className="w-full border-0 border-none bg-transparent p-0 text-sm text-slate-900 placeholder-slate-400 outline-none ring-0 shadow-none focus:border-0 focus:border-none focus:outline-none focus:ring-0 focus:shadow-none"
+              />
+            </div>
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="flex items-center gap-1.5 text-xs font-bold text-[#0f172a] mb-1.5">
+              <Lock size={15} className="text-[#0f172a]" />
+              <span>Password</span>
+            </label>
+            <div className="flex items-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 transition focus-within:border-[#0284c7] focus-within:ring-2 focus-within:ring-sky-100">
+              <Lock size={16} className="mr-2.5 shrink-0 text-slate-400" />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
+                className="w-full border-0 border-none bg-transparent p-0 text-sm text-slate-900 placeholder-slate-400 outline-none ring-0 shadow-none focus:border-0 focus:border-none focus:outline-none focus:ring-0 focus:shadow-none pr-1"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="ml-1 p-1 text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+
+          {/* Checkbox & Forgot Password */}
+          <div className="flex items-center justify-between pt-1 text-xs">
+            <label className="flex items-center gap-2 cursor-pointer select-none font-semibold text-[#0f172a]">
+              <input
+                type="checkbox"
+                checked={keepSignedIn}
+                onChange={(e) => setKeepSignedIn(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-[#0284c7] focus:ring-[#0284c7] cursor-pointer"
+              />
+              <span>Keep me signed in for 30 days</span>
+            </label>
+            <button
+              type="button"
+              onClick={() => {
+                setRecoveryEmail(email);
+                setRecoverySent(false);
+                setIsRecoveryOpen(true);
+              }}
+              className="font-bold text-[#0284c7] hover:underline"
+            >
+              Forgot password?
+            </button>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="flex items-center gap-2 rounded-xl bg-red-50 p-2.5 text-xs font-semibold text-red-600 border border-red-200">
+              <AlertCircle size={15} className="shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Sign In Button */}
+          <button
+            type="submit"
+            disabled={isSigningIn}
+            className="mt-5 w-full rounded-2xl bg-gradient-to-r from-[#0284c7] to-[#0066ff] hover:from-[#0369a1] hover:to-[#0052cc] py-3.5 text-sm font-bold text-white shadow-md shadow-sky-500/25 flex items-center justify-center gap-2 transition active:scale-[0.99] disabled:opacity-70"
+          >
+            {isSigningIn ? (
+              <>
+                <Spinner />
+                <span>Signing in...</span>
+              </>
+            ) : (
+              <>
+                <LogIn size={16} />
+                <span>Sign In to Portal</span>
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Divider */}
+        <div className="relative my-5 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-100" />
+          </div>
+          <span className="relative bg-white px-3 text-[11px] font-semibold text-slate-400">
+            New to Sky-Tech Fiber?
+          </span>
+        </div>
+
+        {/* Check Coverage & Book Now Button */}
+        <button
+          type="button"
+          onClick={onBooking}
+          className="w-full rounded-2xl border border-sky-300 bg-sky-50/60 hover:bg-sky-100/70 py-2.5 text-xs font-bold text-[#0284c7] flex items-center justify-center gap-2 transition shadow-sm"
+        >
+          <BookOpen size={15} />
+          <span>Check Coverage & Book Now →</span>
+        </button>
+      </div>
+
+      {/* Password Recovery Dialog */}
+      {isRecoveryOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl relative">
+            <button
+              type="button"
+              onClick={() => setIsRecoveryOpen(false)}
+              className="absolute right-4 top-4 text-slate-400 hover:text-slate-700 p-1 rounded-full"
+            >
+              <X size={18} />
+            </button>
+
+            {recoverySent ? (
+              <div className="text-center py-2">
+                <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-emerald-50 text-emerald-600">
+                  <CheckCircle2 size={26} />
+                </div>
+                <h3 className="mt-3 text-lg font-black text-slate-900">Check your inbox</h3>
+                <p className="mt-1.5 text-xs text-slate-500">
+                  If an account exists for <strong className="text-slate-800">{recoveryEmail}</strong>, you will receive a reset link.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsRecoveryOpen(false)}
+                  className="mt-5 w-full rounded-xl bg-[#0284c7] py-2.5 text-xs font-bold text-white transition hover:bg-[#0369a1]"
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <div>
+                <h3 className="text-lg font-black text-slate-900">Reset Password</h3>
+                <p className="mt-1 text-xs text-slate-500">
+                  Enter your email to receive a recovery link.
+                </p>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    setRecoverySent(true);
+                  }}
+                  className="mt-4 space-y-3"
+                >
+                  <input
+                    type="email"
+                    required
+                    value={recoveryEmail}
+                    onChange={(e) => setRecoveryEmail(e.target.value)}
+                    placeholder="you@skytech.net"
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs outline-none focus:border-[#0284c7]"
+                  />
+                  <button
+                    type="submit"
+                    className="w-full rounded-xl bg-[#0284c7] py-2.5 text-xs font-bold text-white transition hover:bg-[#0369a1]"
+                  >
+                    Send Recovery Link
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </main>
   );
 }
 
 export default function LoginPage() {
   const router = useRouter();
-  return <Login onBooking={() => router.push('/booking')} onBack={() => router.push('/')} />;
+  return <Login onBooking={() => router.push('/#check-coverage')} onBack={() => router.push('/')} />;
 }

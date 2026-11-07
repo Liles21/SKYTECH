@@ -3,8 +3,10 @@ import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/app/lib/prisma';
 import { DEMO_ACCOUNTS } from '@/app/lib/demo-accounts';
+import { authConfig } from '@/auth.config';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
   trustHost: true,
   providers: [
     Credentials({
@@ -132,31 +134,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        const identity = user as {
-          role?: string;
-          subscriberId?: string;
-          technicianId?: string;
-          image?: string;
-        };
-        token.role = identity.role;
-        token.subscriberId = identity.subscriberId;
-        token.technicianId = identity.technicianId;
-        if (identity.image) token.image = identity.image;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.role = token.role as string;
-        session.user.subscriberId = token.subscriberId;
-        session.user.technicianId = token.technicianId;
-        if (token.image) session.user.image = token.image as string;
-      }
-      return session;
-    },
-  },
-  pages: { signIn: '/login' },
 });

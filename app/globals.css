@@ -125,13 +125,32 @@ textarea[class*="bg-transparent"]:focus {
 .admin-dark-mode .portal-shell .bg-slate-100,
 .admin-dark-mode .portal-shell [class*="bg-slate-100/"],
 .admin-dark-mode .portal-shell [class*="bg-slate-100\\/"],
-.admin-dark-mode .portal-shell .bg-\[\#f8fafc\],
-.admin-dark-mode .portal-shell .bg-\[\#f7faff\],
+.admin-dark-mode .portal-shell [class*="bg-[#f8fafc]"],
+.admin-dark-mode .portal-shell [class*="bg-[#f7faff]"],
+.admin-dark-mode .portal-shell [class*="bg-[#f8faff]"],
+.admin-dark-mode .portal-shell [class*="bg-[#eef3fb]"],
 .admin-dark-mode .portal-shell [class*="bg-gray-50"],
 .admin-dark-mode .portal-shell [class*="bg-gray-100"],
 .admin-dark-mode .portal-shell .hover\:bg-slate-50:hover,
-.admin-dark-mode .portal-shell .hover\:bg-\[\#f1f5f9\]:hover {
+.admin-dark-mode .portal-shell [class*="hover:bg-[#f1f5f9]"]:hover,
+.admin-dark-mode .portal-shell [class*="hover:bg-[#f8fafc]"]:hover {
   background-color: #111c31 !important;
+}
+
+.admin-dark-mode .portal-shell [class*="from-white"] {
+  background-image: none !important;
+  background-color: #17233b !important;
+}
+
+.admin-dark-mode .portal-shell [class*="bg-[#eef4fb]"],
+.admin-dark-mode .portal-shell [class*="bg-[#f7f9fc]"],
+.admin-dark-mode .portal-shell [class*="bg-[#edf3ff]"] {
+  background-color: #0f172a !important;
+}
+
+.admin-dark-mode .portal-shell .qr-code-box {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
 }
 
 .admin-dark-mode .portal-shell .border-slate-100,
@@ -140,6 +159,7 @@ textarea[class*="bg-transparent"]:focus {
 .admin-dark-mode .portal-shell .border-slate-200,
 .admin-dark-mode .portal-shell [class*="border-slate-200/"],
 .admin-dark-mode .portal-shell [class*="border-slate-200\\/"],
+.admin-dark-mode .portal-shell .border-slate-300,
 .admin-dark-mode .portal-shell [class*="border-gray-100"],
 .admin-dark-mode .portal-shell [class*="border-gray-200"] {
   border-color: #2d3b56 !important;
@@ -148,17 +168,43 @@ textarea[class*="bg-transparent"]:focus {
 .admin-dark-mode .portal-shell .text-slate-950,
 .admin-dark-mode .portal-shell .text-slate-900,
 .admin-dark-mode .portal-shell .text-slate-800,
-.admin-dark-mode .portal-shell .text-slate-700 {
+.admin-dark-mode .portal-shell .text-slate-700,
+.admin-dark-mode .portal-shell [class*="text-[#24417e]"],
+.admin-dark-mode .portal-shell [class*="text-[#33415c]"],
+.admin-dark-mode .portal-shell .text-blue-950,
+.admin-dark-mode .portal-shell .text-blue-900,
+.admin-dark-mode .portal-shell .text-amber-950,
+.admin-dark-mode .portal-shell .text-amber-900,
+.admin-dark-mode .portal-shell .text-emerald-950,
+.admin-dark-mode .portal-shell .text-emerald-900,
+.admin-dark-mode .portal-shell .text-purple-950,
+.admin-dark-mode .portal-shell .text-purple-900 {
   color: #f1f5f9 !important;
 }
 
 .admin-dark-mode .portal-shell .text-slate-600,
-.admin-dark-mode .portal-shell .text-slate-500 {
+.admin-dark-mode .portal-shell .text-slate-500,
+.admin-dark-mode .portal-shell [class*="text-blue-800"],
+.admin-dark-mode .portal-shell [class*="text-purple-800"],
+.admin-dark-mode .portal-shell [class*="text-amber-900/"] {
   color: #a9b8cf !important;
 }
 
 .admin-dark-mode .portal-shell .text-slate-400 {
   color: #8191aa !important;
+}
+
+.admin-dark-mode .portal-shell [class*="text-[#2447b6]"],
+.admin-dark-mode .portal-shell [class*="text-[#2166f3]"],
+.admin-dark-mode .portal-shell [class*="text-[#2161e8]"] {
+  color: #60a5fa !important;
+}
+
+.admin-dark-mode .portal-shell [class*="from-purple-50"],
+.admin-dark-mode .portal-shell [class*="from-blue-50"] {
+  background-image: none !important;
+  background-color: #17233b !important;
+  border-color: #2d3b56 !important;
 }
 
 .admin-dark-mode .portal-shell input,

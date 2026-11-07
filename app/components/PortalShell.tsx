@@ -48,11 +48,9 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
     role !== 'admin' &&
     [
       '/subscriber/profile',
-      '/technician/profile',
       '/subscriber/my-transactions',
       '/subscriber/notifications',
       '/technician/notifications',
-      '/technician/tasks',
     ].includes(path);
 
   const [isOpen, setIsOpen] = useState(false);
@@ -125,11 +123,11 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
   const { isDark: isDarkMode } = useTheme();
 
   useEffect(() => {
-    document.documentElement.classList.toggle('admin-dark-mode', role === 'admin' && isDarkMode);
+    document.documentElement.classList.toggle('admin-dark-mode', isDarkMode);
     return () => {
-      if (role === 'admin') document.documentElement.classList.remove('admin-dark-mode');
+      document.documentElement.classList.remove('admin-dark-mode');
     };
-  }, [isDarkMode, role]);
+  }, [isDarkMode]);
 
   // Destination when clicking company logo (never sends to landing page)
   const homeLink =
@@ -207,7 +205,10 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
   function toggleNotifications() {
     const nextOpen = !isNotificationsOpen;
     setIsNotificationsOpen(nextOpen);
-    if (nextOpen) void loadNotifications();
+    if (nextOpen) {
+      setIsProfileOpen(false);
+      void loadNotifications();
+    }
   }
 
   async function markNotificationRead(item: NotificationItem) {
@@ -273,7 +274,7 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
 
   return (
     <div
-      className={`portal-shell ${role !== 'admin' ? 'portal-scrollbar-hidden' : ''} ${role === 'admin' && isDarkMode ? 'admin-dark-mode' : ''
+      className={`portal-shell ${role !== 'admin' ? 'portal-scrollbar-hidden' : ''} ${isDarkMode ? 'admin-dark-mode' : ''
         } min-h-screen overflow-x-hidden text-slate-950 ${role === 'admin' ? 'bg-[#f8fafc]' : 'bg-[#eef4fb]'
         }`}
     >
@@ -617,7 +618,7 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
               </button>
 
               {isNotificationsOpen && (
-                <div className="notification-popover absolute right-0 top-12 z-50 w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_14px_32px_rgba(15,23,42,0.14)]">
+                <div className="notification-popover fixed left-3 right-3 top-[4.25rem] z-50 sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-[360px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_14px_32px_rgba(15,23,42,0.18)]">
                   <div className="flex items-start justify-between border-b border-slate-200 px-4 py-3">
                     <div>
                       <h2 className="text-sm font-bold text-slate-800">Notifications</h2>
@@ -630,7 +631,7 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                     </span>
                   </div>
 
-                  <div className="notification-scroll max-h-45 overflow-y-scroll">
+                  <div className="notification-scroll max-h-72 sm:max-h-80 overflow-y-auto">
                     {notificationError && (
                       <p className="px-4 py-3 text-xs text-red-500">{notificationError}</p>
                     )}
@@ -710,7 +711,13 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
               type="button"
               aria-label="Open profile account menu"
               aria-expanded={isProfileOpen}
-              onClick={() => setIsProfileOpen((open) => !open)}
+              onClick={() => {
+                setIsProfileOpen((open) => {
+                  const next = !open;
+                  if (next) setIsNotificationsOpen(false);
+                  return next;
+                });
+              }}
               className="flex items-center gap-2.5 rounded-2xl p-1.5 pr-2.5 hover:bg-slate-100/90 transition-all duration-200 cursor-pointer group active:scale-[0.98]"
             >
               {/* Profile Avatar Icon with Online Status */}
@@ -767,14 +774,14 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-bold text-slate-900 leading-tight">
-                      {session?.user?.name || (role === 'admin' ? 'Administrator' : 'Valued Subscriber')}
+                      {session?.user?.name || (role === 'admin' ? 'Administrator' : role === 'technician' ? 'Field Technician' : 'Valued Subscriber')}
                     </p>
                     <p className="truncate text-[11px] text-slate-500">
-                      {session?.user?.email || (role === 'admin' ? 'admin@skytech.net' : 'subscriber@skytech.net')}
+                      {session?.user?.email || (role === 'admin' ? 'admin@skytech.net' : role === 'technician' ? 'tech@skytech.net' : 'subscriber@skytech.net')}
                     </p>
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 mt-0.5">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      {role === 'admin' ? 'System Administrator' : 'Fiber Active'}
+                      {role === 'admin' ? 'System Administrator' : role === 'technician' ? 'Field Technician' : 'Fiber Active'}
                     </span>
                   </div>
                 </div>

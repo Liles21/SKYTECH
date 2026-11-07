@@ -94,7 +94,7 @@ function VisualQr() {
   };
 
   return (
-    <div className="relative flex h-44 w-44 items-center justify-center rounded-2xl border border-slate-200 bg-white p-3 shadow-md">
+    <div className="qr-code-box relative flex h-44 w-44 items-center justify-center rounded-2xl border border-slate-200 bg-white p-3 shadow-md">
       <svg
         viewBox="0 0 25 25"
         className="h-full w-full"
@@ -365,11 +365,10 @@ export default function PayBillsPage() {
                 <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-sm transition-all hover:shadow-md">
                   {/* Status Gradient Strip */}
                   <div
-                    className={`absolute inset-x-0 top-0 h-2 ${
-                      hasUnpaid
+                    className={`absolute inset-x-0 top-0 h-2 ${hasUnpaid
                         ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500'
                         : 'bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-500'
-                    }`}
+                      }`}
                   />
 
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-5">
@@ -388,13 +387,12 @@ export default function PayBillsPage() {
                     </div>
 
                     <span
-                      className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold tracking-wide shadow-2xs ${
-                        !hasUnpaid
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold tracking-wide shadow-2xs ${!hasUnpaid
                           ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                           : isPendingReview
                             ? 'bg-amber-100 text-amber-900 border border-amber-300'
                             : 'bg-amber-100 text-amber-800 border border-amber-200'
-                      }`}
+                        }`}
                     >
                       {!hasUnpaid ? (
                         <>
@@ -422,9 +420,8 @@ export default function PayBillsPage() {
                         Total Amount Due
                       </p>
                       <p
-                        className={`text-3xl sm:text-4xl font-extrabold tracking-tight mt-1 ${
-                          hasUnpaid ? 'text-slate-900' : 'text-emerald-600'
-                        }`}
+                        className={`text-3xl sm:text-4xl font-extrabold tracking-tight mt-1 ${hasUnpaid ? 'text-slate-900' : 'text-emerald-600'
+                          }`}
                       >
                         {hasUnpaid
                           ? `₱${Number(activeBill.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`
@@ -443,10 +440,10 @@ export default function PayBillsPage() {
                       <p className="text-sm font-bold text-slate-800 mt-0.5">
                         {activeBill?.dueDate
                           ? new Date(activeBill.dueDate).toLocaleDateString('en-US', {
-                              month: 'long',
-                              day: 'numeric',
-                              year: 'numeric',
-                            })
+                            month: 'long',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })
                           : 'End of Month'}
                       </p>
                       <p className="text-[11px] text-slate-400">
@@ -510,11 +507,10 @@ export default function PayBillsPage() {
                         key={tab.id}
                         type="button"
                         onClick={() => setMethod(tab.id as 'GCash' | 'Walk-in')}
-                        className={`relative flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-4 text-center transition-all cursor-pointer ${
-                          method === tab.id
+                        className={`relative flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-4 text-center transition-all cursor-pointer ${method === tab.id
                             ? 'border-[#2563eb] bg-blue-50/70 text-[#2563eb] shadow-sm'
                             : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                        }`}
+                          }`}
                       >
                         {tab.popular && (
                           <span className="absolute -top-2 rounded-full bg-[#2563eb] px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">
@@ -926,11 +922,10 @@ export default function PayBillsPage() {
                                 {bill.billingPeriod} Invoice
                               </span>
                               <span
-                                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                                  bill.status === 'Paid'
+                                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${bill.status === 'Paid'
                                     ? 'bg-emerald-50 text-emerald-600'
                                     : 'bg-amber-50 text-amber-600'
-                                }`}
+                                  }`}
                               >
                                 {bill.status}
                               </span>
@@ -1037,11 +1032,10 @@ export default function PayBillsPage() {
 
                 <div className="text-right">
                   <span
-                    className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${
-                      receiptBill.status === 'Paid'
+                    className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${receiptBill.status === 'Paid'
                         ? 'bg-emerald-100 text-emerald-800'
                         : 'bg-amber-100 text-amber-800'
-                    }`}
+                      }`}
                   >
                     {receiptBill.status === 'Paid' ? 'PAID IN FULL' : 'UNPAID STATEMENT'}
                   </span>

@@ -453,7 +453,7 @@ export default function SubscriberAccount() {
               </div>
 
               {/* Fiber Optical Specs Matrix */}
-              <div className="grid grid-cols-3 border-t border-slate-100 bg-[#f8faff] py-4 text-center">
+              <div className="grid grid-cols-3 border-t border-slate-100 bg-slate-50 py-4 text-center">
                 <div className="border-r border-slate-200/70 px-2">
                   <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-[#2563eb]">
                     <Wifi size={18} />

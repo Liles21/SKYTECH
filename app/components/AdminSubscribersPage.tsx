@@ -739,8 +739,8 @@ export function AdminSubscribersPage() {
                     <td className="px-5 py-4">
                       <span
                         className={`admin-status-pill rounded-full px-2.5 py-1 text-xs font-bold tracking-wide ${subscriber.status === "Active"
-                            ? "bg-emerald-50 text-emerald-500"
-                            : "bg-amber-50 text-amber-500"
+                          ? "bg-emerald-50 text-emerald-500"
+                          : "bg-amber-50 text-amber-500"
                           }`}
                       >
                         {subscriber.status}
@@ -768,8 +768,8 @@ export function AdminSubscribersPage() {
                             setActiveMenuId(subscriber.id);
                           }}
                           className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-all cursor-pointer ${activeMenuId === subscriber.id
-                              ? "border-slate-300 bg-slate-100 text-slate-900 shadow-xs"
-                              : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 shadow-2xs"
+                            ? "border-slate-300 bg-slate-100 text-slate-900 shadow-xs"
+                            : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 shadow-2xs"
                             }`}
                           title="Subscriber actions"
                           aria-label="Subscriber actions"

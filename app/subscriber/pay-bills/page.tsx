@@ -54,19 +54,98 @@ type Account = {
   monthlyPrice: number;
 };
 
-// Generates a visual QR code matrix pattern
+// Generates a crisp, realistic SVG QR code with corner finder patterns and center GCash badge
 function VisualQr() {
-  const qrPattern =
-    '11111110010111111110100000100100000101011101000101110101011101000101110101011101010100000100100000101111111001011111110000000001000000000111010100000101110101011101010111010000000001000000000111111100101111111010000010010000010101110100010111010101110100010111010101110101010000010010000010111111100101111111';
+  const matrix = [
+    '0000000010110110100000000',
+    '0000000001101001100000000',
+    '0000000011010110000000000',
+    '0000000001011010100000000',
+    '0000000010100101100000000',
+    '0000000001101100100000000',
+    '0000000010101010100000000',
+    '0000000001011001000000000',
+    '1101101011001011010110101',
+    '0110010101100100101101010',
+    '1011011010000000110011011',
+    '1100100101000000101100101',
+    '0101110110000000010111010',
+    '1010011001000000110010110',
+    '1101010110000000101101001',
+    '0110101001101011010010110',
+    '1011011010110101000001011',
+    '0000000011001010000000101',
+    '0000000010110101000001100',
+    '0000000001101011000000110',
+    '0000000011010100000001011',
+    '0000000001011010110110101',
+    '0000000010110111001011010',
+    '0000000001101001101100110',
+    '0000000011010110010111001',
+  ];
+
+  const isReserved = (r: number, c: number) => {
+    if (r < 8 && c < 8) return true; // Top-left finder + separator
+    if (r < 8 && c > 16) return true; // Top-right finder + separator
+    if (r > 16 && c < 8) return true; // Bottom-left finder + separator
+    if (r >= 16 && r <= 20 && c >= 16 && c <= 20) return true; // Alignment pattern
+    if (r >= 10 && r <= 14 && c >= 10 && c <= 14) return true; // Center badge area
+    return false;
+  };
 
   return (
-    <div className="grid h-40 w-40 grid-cols-15 gap-0.5 rounded-2xl bg-white p-3.5 shadow-md border border-slate-200">
-      {qrPattern.split('').map((bit, idx) => (
-        <span
-          key={idx}
-          className={`${bit === '1' ? 'bg-[#1b43b4]' : 'bg-white'} rounded-[1px]`}
+    <div className="relative flex h-44 w-44 items-center justify-center rounded-2xl border border-slate-200 bg-white p-3 shadow-md">
+      <svg
+        viewBox="0 0 25 25"
+        className="h-full w-full"
+        shapeRendering="crispEdges"
+        aria-label="GCash QR Code for 09091423431"
+      >
+        {/* Top-Left Finder Pattern */}
+        <path
+          fill="#1b43b4"
+          fillRule="evenodd"
+          d="M0,0 h7 v7 h-7 z M1,1 v5 h5 v-5 z M2,2 h3 v3 h-3 z"
         />
-      ))}
+        {/* Top-Right Finder Pattern */}
+        <path
+          fill="#1b43b4"
+          fillRule="evenodd"
+          d="M18,0 h7 v7 h-7 z M19,1 v5 h5 v-5 z M20,2 h3 v3 h-3 z"
+        />
+        {/* Bottom-Left Finder Pattern */}
+        <path
+          fill="#1b43b4"
+          fillRule="evenodd"
+          d="M0,18 h7 v7 h-7 z M1,19 v5 h5 v-5 z M2,20 h3 v3 h-3 z"
+        />
+        {/* Bottom-Right Alignment Pattern */}
+        <path
+          fill="#1b43b4"
+          fillRule="evenodd"
+          d="M16,16 h5 v5 h-5 z M17,17 v3 h3 v-3 z M18,18 h1 v1 h-1 z"
+        />
+        {/* Data & Timing Modules */}
+        {matrix.map((row, r) =>
+          row.split('').map((bit, c) =>
+            !isReserved(r, c) && bit === '1' ? (
+              <rect
+                key={`${r}-${c}`}
+                x={c + 0.08}
+                y={r + 0.08}
+                width={0.84}
+                height={0.84}
+                fill="#1b43b4"
+              />
+            ) : null
+          )
+        )}
+      </svg>
+
+      {/* Center GCash Badge */}
+      <div className="pointer-events-none absolute grid h-8 w-8 place-items-center rounded-lg border-2 border-white bg-[#007dfe] text-xs font-black text-white shadow-sm">
+        G
+      </div>
     </div>
   );
 }
@@ -472,11 +551,11 @@ export default function PayBillsPage() {
                               </p>
                               <div className="flex items-center justify-between mt-1">
                                 <span className="font-mono text-base font-bold text-slate-900">
-                                  0917-892-4521
+                                  09091423431
                                 </span>
                                 <button
                                   type="button"
-                                  onClick={() => copyToClipboard('09178924521', 'gcash')}
+                                  onClick={() => copyToClipboard('09091423431', 'gcash')}
                                   className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                                 >
                                   {copiedText === 'gcash' ? (
@@ -527,7 +606,7 @@ export default function PayBillsPage() {
                           </div>
                           <div className="flex items-center gap-2.5 text-slate-600">
                             <Phone size={16} className="text-slate-400 shrink-0" />
-                            <span>Hotline: (085) 815-2026 / 0917-892-4521</span>
+                            <span>Hotline: (085) 815-2026 / 09091423431</span>
                           </div>
                         </div>
                       </div>

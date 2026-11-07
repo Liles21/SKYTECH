@@ -82,19 +82,19 @@ export function AdminReportsPage() {
         </button>
       </div>
 
-      <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-7 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {statCards.map(([label, value, trend]) => (
-          <article key={label} className="rounded-xl border border-slate-200 bg-white px-6 py-5">
-            <p className="text-xs font-bold tracking-wide text-slate-400">{label}</p>
-            <p className="mt-3 text-2xl font-bold text-slate-900">{value}</p>
-            <p className="mt-2 text-xs font-semibold text-emerald-600">{trend}</p>
+          <article key={label} className="rounded-xl border border-slate-200 bg-white px-4 py-4 sm:px-6 sm:py-5">
+            <p className="text-[11px] sm:text-xs font-bold tracking-wide text-slate-400">{label}</p>
+            <p className="mt-2 sm:mt-3 text-xl sm:text-2xl font-bold text-slate-900">{value}</p>
+            <p className="mt-2 text-[11px] sm:text-xs font-semibold text-emerald-600">{trend}</p>
           </article>
         ))}
       </div>
 
       <div className="mt-7 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
         <ChartCard title="Monthly Revenue" subtitle="Last 6 months">
-          <div className="mt-7 flex h-56 items-end gap-3 border-b border-slate-100 px-3 pb-2 sm:gap-6">
+          <div className="mt-7 flex h-56 items-end gap-2 border-b border-slate-100 px-1 pb-2 sm:gap-6 sm:px-3">
             {revenueTrend.length ? (
               revenueTrend.map((entry) => {
                 const val = Number(entry.value) || 0;
@@ -108,7 +108,7 @@ export function AdminReportsPage() {
                           style={{ height: `${barHeight}%` }}
                           title={`${entry.label}: ${formatCurrency(val)}`}
                         >
-                          <span className="dashboard-badge-blue absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-600">
+                          <span className="dashboard-badge-blue absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-blue-50 px-1 sm:px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold text-blue-600">
                             {formatCurrency(val)}
                           </span>
                         </div>

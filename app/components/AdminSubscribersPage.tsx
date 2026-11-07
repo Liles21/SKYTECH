@@ -618,8 +618,8 @@ export function AdminSubscribersPage() {
 
       <div className="subscriber-table-shell mt-7 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xs">
         {/* Table Toolbar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 p-4">
-          <div className="relative w-full max-w-xs">
+        <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 border-b border-slate-100 p-4">
+          <div className="relative w-full sm:max-w-xs">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
               size={17}
@@ -632,7 +632,7 @@ export function AdminSubscribersPage() {
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex w-full sm:w-auto flex-wrap items-center gap-2.5 sm:gap-3">
             <label className="status-filter-container relative">
               <select
                 value={filter}
@@ -653,13 +653,13 @@ export function AdminSubscribersPage() {
             <button
               type="button"
               onClick={() => setShowArchived((current) => !current)}
-              className="admin-archive-toggle rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-600 transition-all duration-200 ease-out hover:bg-slate-50 cursor-pointer"
+              className="admin-archive-toggle rounded-lg border border-slate-200 bg-white px-4 sm:px-5 py-2.5 text-sm font-semibold text-slate-600 transition-all duration-200 ease-out hover:bg-slate-50 cursor-pointer"
             >
               {showArchived ? "Show Active" : "Show Archived"}
             </button>
 
             {/* Live record counter rendered via React state */}
-            <span className="live-record-counter text-sm font-medium text-slate-400 pl-2">
+            <span className="live-record-counter ml-auto sm:ml-0 text-sm font-medium text-slate-400 sm:pl-2">
               {rows.length} {rows.length === 1 ? "record" : "records"}
             </span>
           </div>
@@ -919,7 +919,7 @@ export function AdminSubscribersPage() {
             )}
 
             <div className="flex-1 space-y-4 overflow-y-auto px-6 py-5 text-sm">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="First Name *">
                   <input
                     name="firstName"
@@ -975,7 +975,7 @@ export function AdminSubscribersPage() {
                 />
               </Field>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Plan *">
                   <div className="relative mt-2">
                     <select

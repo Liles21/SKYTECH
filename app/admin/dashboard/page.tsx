@@ -313,7 +313,7 @@ function RevenueChart({ values, labels }: { values: number[]; labels: string[] }
             value > 0 ? Math.max(6, (Math.min(value, niceMax) / niceMax) * 100) : 0;
           return (
             <div
-              className="group relative flex h-full items-end justify-center px-2"
+              className="group relative flex h-full items-end justify-center px-1 sm:px-2"
               key={`${labels[index]}-${index}`}
             >
               {value > 0 ? (
@@ -322,7 +322,7 @@ function RevenueChart({ values, labels }: { values: number[]; labels: string[] }
                   style={{ height: `${heightPercent}%` }}
                   title={`${labels[index]}: ₱${value.toLocaleString()}`}
                 >
-                  <span className="dashboard-badge-blue pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-600 transition-transform group-hover:-translate-y-0.5">
+                  <span className="dashboard-badge-blue pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-blue-50 px-1 sm:px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold text-blue-600 transition-transform group-hover:-translate-y-0.5">
                     ₱{value.toLocaleString()}
                   </span>
                 </div>

@@ -49,9 +49,7 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
     [
       '/subscriber/profile',
       '/technician/profile',
-      '/subscriber/plan-details',
       '/subscriber/my-transactions',
-      '/subscriber/pay-bills',
       '/subscriber/notifications',
       '/technician/notifications',
       '/technician/tasks',
@@ -113,12 +111,16 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
     }
   }, [role, path]);
 
-  // Manage Users submenu toggle (auto-open if path matches a sub-item)
+  // Manage Users submenu toggle (auto-open only if path matches a sub-item)
   const isUserSectionActive =
     path.startsWith('/admin/subscribers') ||
     path.startsWith('/admin/technicians') ||
     path.startsWith('/admin/tickets');
-  const [isManageUsersOpen, setIsManageUsersOpen] = useState(true);
+  const [isManageUsersOpen, setIsManageUsersOpen] = useState(isUserSectionActive);
+
+  useEffect(() => {
+    setIsManageUsersOpen(isUserSectionActive);
+  }, [isUserSectionActive, path]);
 
   const { isDark: isDarkMode } = useTheme();
 
@@ -330,7 +332,10 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
               {/* 1. Dashboard (Single item with active left bar) */}
               <Link
                 href="/admin/dashboard"
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false);
+                  setIsManageUsersOpen(false);
+                }}
                 className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${path === '/admin/dashboard'
                     ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
@@ -427,7 +432,10 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
               {/* 3. Billing (Direct link, no dropdown) */}
               <Link
                 href="/admin/billing"
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false);
+                  setIsManageUsersOpen(false);
+                }}
                 className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${path.startsWith('/admin/billing')
                     ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
@@ -447,7 +455,10 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
               {/* 4. Bookings (Direct link, no dropdown) */}
               <Link
                 href="/admin/bookings"
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false);
+                  setIsManageUsersOpen(false);
+                }}
                 className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${path.startsWith('/admin/bookings')
                     ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
@@ -467,7 +478,10 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
               {/* 5. Installations (Direct link, no dropdown) */}
               <Link
                 href="/admin/installations"
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false);
+                  setIsManageUsersOpen(false);
+                }}
                 className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${path.startsWith('/admin/installations')
                     ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
@@ -487,7 +501,10 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
               {/* 6. Reports (Direct link, no dropdown) */}
               <Link
                 href="/admin/reports"
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false);
+                  setIsManageUsersOpen(false);
+                }}
                 className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${path.startsWith('/admin/reports')
                     ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
@@ -507,7 +524,10 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
               {/* 7. Maintenance (Direct link, with alert icon) */}
               <Link
                 href="/admin/maintenance"
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false);
+                  setIsManageUsersOpen(false);
+                }}
                 className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${path.startsWith('/admin/maintenance')
                     ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
@@ -561,14 +581,14 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
             <Menu size={20} />
           </button>
 
-          <div className="hidden sm:flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="truncate text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
               {role === 'admin'
                 ? 'Sky-Tech Admin Console'
                 : role === 'technician'
                   ? 'Field Technician Portal'
-                  : 'Sky-Tech Fiber Subscriber Portal'}
+                  : 'Sky-Tech Subscriber Portal'}
             </span>
           </div>
         </div>

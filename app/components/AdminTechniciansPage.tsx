@@ -170,22 +170,22 @@ export function AdminTechniciansPage() {
         </button>
       </div>
 
-      <div className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-7 grid grid-cols-2 gap-3 xl:grid-cols-4">
         {[
           ['TOTAL', String(summaryCounts.total)],
           ['ACTIVE', String(summaryCounts.active)],
           ['OFF DUTY', String(summaryCounts.offDuty)],
           ['ON LEAVE', String(summaryCounts.onLeave)],
         ].map(([label, value]) => (
-          <article key={label} className="rounded-xl border border-slate-200 bg-white px-6 py-5">
-            <p className="text-xs font-bold tracking-wide text-slate-400">{label}</p>
-            <p className="mt-3 text-2xl font-bold text-slate-900">{value}</p>
+          <article key={label} className="rounded-xl border border-slate-200 bg-white px-4 py-4 sm:px-6 sm:py-5">
+            <p className="text-[11px] sm:text-xs font-bold tracking-wide text-slate-400">{label}</p>
+            <p className="mt-2 sm:mt-3 text-xl sm:text-2xl font-bold text-slate-900">{value}</p>
           </article>
         ))}
       </div>
 
       <div className="mt-7 flex flex-wrap items-center gap-3">
-        <div className="relative w-full max-w-xs">
+        <div className="relative w-full sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
           <input
             value={query}

@@ -270,21 +270,21 @@ export default function AdminMaintenancePage() {
 
   return (
     <PortalShell role="admin">
-      <div className="bg-[#f8fafc] pb-12 text-slate-900">
+      <div className="pb-10 text-slate-900">
         {/* Top Header Banner */}
-        <div className="relative overflow-hidden bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#111827] text-white shadow-xl">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#111827] text-white shadow-xl">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(56,189,248,0.12),transparent_60%)] pointer-events-none" />
           <div className="absolute right-0 top-0 h-64 w-64 -translate-y-12 translate-x-12 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
 
-          <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-8 lg:px-10">
+          <div className="relative p-5 sm:p-7 lg:p-8">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5">
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-blue-600/30 border border-blue-500/40 text-blue-400 shadow-md">
-                  <ShieldAlert size={26} />
+              <div className="flex items-start sm:items-center gap-3.5">
+                <div className="grid h-11 w-11 sm:h-12 sm:w-12 shrink-0 place-items-center rounded-2xl bg-blue-600/30 border border-blue-500/40 text-blue-400 shadow-md">
+                  <ShieldAlert size={24} />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2.5">
-                    <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <h1 className="text-xl font-black tracking-tight text-white sm:text-3xl">
                       Maintenance & Broadcasts
                     </h1>
                     {maintenanceMode ? (
@@ -306,8 +306,8 @@ export default function AdminMaintenancePage() {
               </div>
 
               {/* Subscriber Target Count Pill */}
-              <div className="flex items-center gap-3 rounded-2xl bg-white/10 border border-white/15 px-4 py-2.5 backdrop-blur-md">
-                <div className="grid h-9 w-9 place-items-center rounded-xl bg-blue-500/20 text-sky-300">
+              <div className="flex w-full sm:w-auto items-center gap-3 rounded-2xl bg-white/10 border border-white/15 px-4 py-2.5 backdrop-blur-md">
+                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-blue-500/20 text-sky-300">
                   <Users size={18} />
                 </div>
                 <div>
@@ -322,7 +322,7 @@ export default function AdminMaintenancePage() {
         </div>
 
         {/* Content Container */}
-        <div className="mx-auto max-w-7xl px-4 pt-6 pb-2 sm:px-8 lg:px-10">
+        <div className="pt-6 pb-2">
           {/* Feedback alerts */}
           {successMessage && (
             <div className="mb-6 flex items-center justify-between rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-sm font-semibold text-emerald-800 shadow-sm animate-in fade-in">
@@ -592,12 +592,12 @@ export default function AdminMaintenancePage() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2 border-t border-slate-100">
                     <button
                       type="button"
                       disabled={isSubmitting}
                       onClick={handleBroadcastOnly}
-                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition active:scale-95 cursor-pointer disabled:opacity-50"
+                      className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition active:scale-95 cursor-pointer disabled:opacity-50"
                     >
                       <Send size={15} className="text-blue-600" />
                       <span>Send Email Broadcast Only</span>
@@ -606,7 +606,7 @@ export default function AdminMaintenancePage() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 px-6 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md shadow-blue-500/20 transition active:scale-95 cursor-pointer disabled:opacity-75"
+                      className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 px-6 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md shadow-blue-500/20 transition active:scale-95 cursor-pointer disabled:opacity-75"
                     >
                       {isSubmitting ? (
                         <>

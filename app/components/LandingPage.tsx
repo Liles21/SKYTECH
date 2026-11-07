@@ -835,18 +835,20 @@ export function LandingPage({ onLogin }: Props) {
             <div className="flex flex-col lg:flex-row gap-6">
               {/* Left / Top: Interactive Map View of Sibagat */}
               <div className="lg:w-7/12 flex flex-col">
-                <div className="flex items-center justify-between pb-3 text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pb-3 text-[11px] sm:text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="h-2 w-2 sm:h-2.5 sm:w-2.5 shrink-0 rounded-full bg-emerald-400 animate-pulse" />
                     <span className="font-bold uppercase tracking-wider text-emerald-300">
                       Live Fiber Grid: Sibagat, Agusan del Norte
                     </span>
                   </div>
-                  <span className="text-blue-200">Coords: 8.8211° N, 125.6980° E</span>
+                  <span className="text-[10px] sm:text-xs text-blue-200/90 font-mono">
+                    Coords: 8.8211° N, 125.6980° E
+                  </span>
                 </div>
 
                 {/* Map Container */}
-                <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-inner">
+                <div className="relative h-[300px] sm:h-[380px] lg:h-[420px] w-full overflow-hidden rounded-2xl border border-white/15 bg-slate-950 shadow-inner">
                   {/* Real OpenStreetMap centered on Sibagat, Agusan del Norte */}
                   <iframe
                     title="Sky-Tech Sibagat Fiber Coverage Map"
@@ -857,20 +859,20 @@ export function LandingPage({ onLogin }: Props) {
                   />
 
                   {/* Sky-Tech Central Station Overlay Badge */}
-                  <div className="absolute top-3 left-3 rounded-xl bg-slate-900/90 border border-sky-400/30 p-2.5 shadow-lg backdrop-blur-md text-left">
+                  <div className="pointer-events-none absolute top-2.5 left-2.5 sm:top-3 sm:left-3 rounded-xl bg-slate-900/90 border border-sky-400/30 px-2.5 py-1.5 sm:p-2.5 shadow-lg backdrop-blur-md text-left">
                     <div className="flex items-center gap-2">
-                      <div className="grid h-6 w-6 place-items-center rounded-lg bg-[#0284c7] text-white">
-                        <Wifi size={13} />
+                      <div className="grid h-5 w-5 sm:h-6 sm:w-6 shrink-0 place-items-center rounded-lg bg-[#0284c7] text-white">
+                        <Wifi size={12} />
                       </div>
                       <div>
-                        <p className="text-[11px] font-black text-white leading-tight">Sky-Tech Central Hub</p>
-                        <p className="text-[9px] text-sky-300">Poblacion, Sibagat, Agusan</p>
+                        <p className="text-[10px] sm:text-[11px] font-black text-white leading-tight">Sky-Tech Central Hub</p>
+                        <p className="text-[9px] text-sky-300 leading-tight">Poblacion, Sibagat, Agusan</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Active Selected Zone Floating Card */}
-                  <div className="absolute bottom-3 right-3 left-3 sm:left-auto rounded-xl bg-slate-900/95 border border-white/20 p-3 shadow-xl backdrop-blur-md text-left max-w-xs">
+                  {/* Active Selected Zone Floating Card (Desktop / Tablet only so mobile map stays unobstructed) */}
+                  <div className="hidden sm:block absolute bottom-3 right-3 rounded-xl bg-slate-900/95 border border-white/20 p-3 shadow-xl backdrop-blur-md text-left w-64">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-black text-white">{activeZone.name}</span>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -883,11 +885,41 @@ export function LandingPage({ onLogin }: Props) {
                       {activeZone.coverage} · {activeZone.speed}
                     </p>
                     <button
+                      type="button"
                       onClick={() => {
                         setPrefilledBarangay(activeZone.name);
                         setIsModalOpen(true);
                       }}
-                      className="mt-2.5 w-full rounded-lg bg-[#0284c7] hover:bg-[#0369a1] py-1.5 text-center text-xs font-bold text-white transition shadow"
+                      className="mt-2.5 w-full rounded-lg bg-[#0284c7] hover:bg-[#0369a1] py-1.5 text-center text-xs font-bold text-white transition shadow cursor-pointer"
+                    >
+                      Apply for {activeZone.name} →
+                    </button>
+                  </div>
+                </div>
+
+                {/* Mobile Active Zone Card (Placed cleanly below map so it never covers the map view) */}
+                <div className="mt-3 sm:hidden rounded-xl bg-slate-900/95 border border-white/15 p-3 shadow-lg text-left">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-white">{activeZone.name}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          activeZone.status === 'Active' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
+                        }`}>
+                          {activeZone.status}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 text-[11px] text-slate-300">
+                        {activeZone.coverage} · {activeZone.speed}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPrefilledBarangay(activeZone.name);
+                        setIsModalOpen(true);
+                      }}
+                      className="shrink-0 rounded-lg bg-[#0284c7] hover:bg-[#0369a1] px-3.5 py-2 text-center text-xs font-bold text-white transition shadow"
                     >
                       Apply for {activeZone.name} →
                     </button>

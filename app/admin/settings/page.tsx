@@ -1,9 +1,10 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { Check, Edit3, LoaderCircle, Plus, Save, Trash2, X } from 'lucide-react';
+import { Check, Edit3, LoaderCircle, Moon, Plus, Save, Sun, Trash2, X } from 'lucide-react';
 import { PortalShell } from '@/app/components/PortalShell';
-import { DEFAULT_PLANS, DEFAULT_SETTINGS, PlanItem } from '@/app/api/settings/route';
+import { DEFAULT_PLANS, DEFAULT_SETTINGS, PlanItem } from '@/app/lib/settings';
+import { useTheme } from '@/app/lib/theme';
 
 type Plan = PlanItem;
 
@@ -40,6 +41,7 @@ function normalizePlans(value: unknown): Plan[] {
 }
 
 export default function SettingsPage() {
+  const { isDark: isDarkMode, setTheme } = useTheme();
   const [settings, setSettings] = useState<Settings>(blank);
   const [planDraft, setPlanDraft] = useState<Plan | null>(null);
   const [planIndex, setPlanIndex] = useState<number | null>(null);
@@ -156,6 +158,111 @@ export default function SettingsPage() {
           </div>
         ) : (
           <form onSubmit={save} className="mt-7 space-y-6">
+            {/* Appearance & Theme (Light Mode / Dark Mode) */}
+            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-100 px-6 py-4">
+                <h2 className="font-bold text-slate-900">Appearance & Theme</h2>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Select your preferred interface display mode. Choose Light Mode for a clean, high-contrast look or Dark Mode for reduced glare.
+                </p>
+              </div>
+              <div className="grid gap-4 p-6 sm:grid-cols-2">
+                {/* Light Mode Card */}
+                <button
+                  type="button"
+                  onClick={() => setTheme(false)}
+                  className={`group relative flex flex-col items-start rounded-2xl border-2 p-5 text-left transition-all duration-200 cursor-pointer ${
+                    !isDarkMode
+                      ? 'border-[#2563eb] bg-blue-50/50 shadow-md shadow-blue-500/10'
+                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                  }`}
+                >
+                  <div className="flex w-full items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-100 text-amber-600">
+                        <Sun size={20} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-sm text-slate-900">Light Mode</span>
+                          {!isDarkMode && (
+                            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                              Active
+                            </span>
+                          )}
+                        </div>
+                        <span className="block text-xs text-slate-500 mt-0.5">
+                          Clean white background with dark text
+                        </span>
+                      </div>
+                    </div>
+                    {!isDarkMode && (
+                      <span className="rounded-full bg-[#2563eb] p-1 text-white shadow-sm">
+                        <Check size={14} />
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-4 w-full rounded-xl border border-slate-200 bg-white p-3 shadow-2xs">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                      <div className="h-2 w-16 rounded bg-slate-200" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="h-2 w-full rounded bg-slate-100" />
+                      <div className="h-2 w-3/4 rounded bg-slate-100" />
+                    </div>
+                  </div>
+                </button>
+
+                {/* Dark Mode Card */}
+                <button
+                  type="button"
+                  onClick={() => setTheme(true)}
+                  className={`group relative flex flex-col items-start rounded-2xl border-2 p-5 text-left transition-all duration-200 cursor-pointer ${
+                    isDarkMode
+                      ? 'border-[#2563eb] bg-blue-50/50 shadow-md shadow-blue-500/10'
+                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                  }`}
+                >
+                  <div className="flex w-full items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="grid h-10 w-10 place-items-center rounded-xl bg-indigo-950/70 text-indigo-400">
+                        <Moon size={20} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-sm text-slate-900">Dark Mode</span>
+                          {isDarkMode && (
+                            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                              Active
+                            </span>
+                          )}
+                        </div>
+                        <span className="block text-xs text-slate-500 mt-0.5">
+                          Eye-friendly deep navy and slate tones
+                        </span>
+                      </div>
+                    </div>
+                    {isDarkMode && (
+                      <span className="rounded-full bg-[#2563eb] p-1 text-white shadow-sm">
+                        <Check size={14} />
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-4 w-full rounded-xl border border-slate-700 bg-slate-900 p-3 shadow-2xs">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="h-2 w-2 rounded-full bg-emerald-400" />
+                      <div className="h-2 w-16 rounded bg-slate-700" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="h-2 w-full rounded bg-slate-800" />
+                      <div className="h-2 w-3/4 rounded bg-slate-800" />
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </section>
+
             {/* Company Info */}
             <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
               <div className="border-b border-slate-100 px-6 py-4">

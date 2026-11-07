@@ -25,7 +25,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (localStorage.getItem('skytech-admin-theme') === 'dark') {
+                  document.documentElement.classList.add('admin-dark-mode');
+                } else {
+                  document.documentElement.classList.remove('admin-dark-mode');
+                }
+              } catch (_) {}
+            `,
+          }}
+        />
+      </head>
       <body className="antialiased font-sans">
         <Providers>{children}</Providers>
       </body>

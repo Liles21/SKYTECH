@@ -32,6 +32,7 @@ type GeneratedNotification = {
 };
 
 export async function GET() {
+	try {
 	const access = await requireRole(['admin', 'technician', 'subscriber']);
 	if (access.response) return access.response;
 	const user = access.session?.user;
@@ -42,32 +43,45 @@ export async function GET() {
 			prisma.ticket.findMany({ where: { status: 'Resolved', technicianId: { not: null } }, include: { technician: true, subscriber: true }, orderBy: { updatedAt: 'desc' } }),
 			prisma.bill.findMany({ where: { status: 'Overdue' }, include: { subscriber: true }, orderBy: { dueDate: 'desc' } }),
 		]);
-		const installationSubscribers = await prisma.subscriber.findMany({ where: { id: { in: completedInstallations.map((installation) => installation.subscriberId) } }, select: { id: true, name: true } });
+		const installationSubscribers = completedInstallations.length
+			? await prisma.subscriber.findMany({ where: { id: { in: completedInstallations.map((installation) => installation.subscriberId) } }, select: { id: true, name: true } })
+			: [];
 		const subscriberById = new Map(installationSubscribers.map((subscriber) => [subscriber.id, subscriber.name]));
 		const activeInstallationNotificationIds = completedInstallations.map((installation) => `admin-technician-installation-${installation.id}`);
 		const activeRepairNotificationIds = completedRepairs.map((ticket) => `admin-technician-repair-${ticket.id}`);
-		await prisma.$transaction([
-			prisma.notification.deleteMany({ where: { forRole: 'admin', id: { startsWith: 'admin-booking-' } } }),
-			prisma.notification.deleteMany({ where: { forRole: 'admin', id: { startsWith: 'admin-installation-' } } }),
-			prisma.notification.deleteMany({ where: { forRole: 'admin', id: { startsWith: 'admin-technician-installation-', notIn: activeInstallationNotificationIds } } }),
-			prisma.notification.deleteMany({ where: { forRole: 'admin', id: { startsWith: 'admin-technician-repair-', notIn: activeRepairNotificationIds } } }),
-			prisma.notification.deleteMany({ where: { forRole: 'admin', type: 'system' } }),
-			...completedInstallations.map((installation) => prisma.notification.upsert({
+		await prisma.notification.deleteMany({
+			where: {
+				forRole: 'admin',
+				OR: [
+					{ id: { startsWith: 'admin-booking-' } },
+					{ id: { startsWith: 'admin-installation-' } },
+					{ id: { startsWith: 'admin-technician-installation-', notIn: activeInstallationNotificationIds } },
+					{ id: { startsWith: 'admin-technician-repair-', notIn: activeRepairNotificationIds } },
+					{ type: 'system' },
+				],
+			},
+		});
+		for (const installation of completedInstallations) {
+			await prisma.notification.upsert({
 				where: { id: `admin-technician-installation-${installation.id}` },
 				create: { id: `admin-technician-installation-${installation.id}`, forRole: 'admin', type: 'installation', title: 'Technician Update', body: `${installation.technician?.name || 'A technician'} successfully completed the installation for ${subscriberById.get(installation.subscriberId) || 'a subscriber'}.`, timestamp: notificationTimestamp },
 				update: { title: 'Technician Update', body: `${installation.technician?.name || 'A technician'} successfully completed the installation for ${subscriberById.get(installation.subscriberId) || 'a subscriber'}.` },
-			})),
-			...completedRepairs.map((ticket) => prisma.notification.upsert({
+			});
+		}
+		for (const ticket of completedRepairs) {
+			await prisma.notification.upsert({
 				where: { id: `admin-technician-repair-${ticket.id}` },
 				create: { id: `admin-technician-repair-${ticket.id}`, forRole: 'admin', type: 'task', title: 'Technician Update', body: `${ticket.technician?.name || 'A technician'} successfully resolved the repair issue for ${ticket.subscriber.name}.`, timestamp: notificationTimestamp },
 				update: { title: 'Technician Update', body: `${ticket.technician?.name || 'A technician'} successfully resolved the repair issue for ${ticket.subscriber.name}.` },
-			})),
-			...overdueBills.map((bill) => prisma.notification.upsert({
+			});
+		}
+		for (const bill of overdueBills) {
+			await prisma.notification.upsert({
 				where: { id: `admin-bill-${bill.id}` },
 				create: { id: `admin-bill-${bill.id}`, forRole: 'admin', type: 'billing', title: 'Subscriber Overdue', body: `${bill.subscriber.name} has an overdue bill of ₱${bill.amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}. Please follow up.`, timestamp: notificationTimestamp },
 				update: { title: 'Subscriber Overdue', body: `${bill.subscriber.name} has an overdue bill of ₱${bill.amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}. Please follow up.` },
-			})),
-		]);
+			});
+		}
 	}
 	const data = await prisma.notification.findMany({
 		where: user?.role === 'subscriber'
@@ -251,5 +265,9 @@ export async function GET() {
 		data: sortNotifications(Array.from(notificationsById.values())),
 		error: null,
 	});
+	} catch (error) {
+		console.error('Failed to load notifications:', error);
+		return NextResponse.json({ data: [], error: null }, { status: 200 });
+	}
 }
 export async function POST(request: Request) { const body = await request.json(); if (!body.forRole || !body.type || !body.title || !body.body) return NextResponse.json({ data: null, error: 'Role, type, title, and body are required.' }, { status: 400 }); const notification = await prisma.notification.create({ data: { forRole: body.forRole, forUserId: body.forUserId || null, type: body.type, title: body.title, body: body.body } }); return NextResponse.json({ data: notification, error: null }, { status: 201 }); }

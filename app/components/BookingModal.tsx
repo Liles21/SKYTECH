@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { CheckCircle2, ChevronDown, X } from 'lucide-react';
 import { Spinner } from '@/app/components/Spinner';
-import { DEFAULT_PLANS, PlanItem } from '@/app/api/settings/route';
+import { DEFAULT_PLANS, PlanItem } from '@/app/lib/settings';
 
 type SubmittedBooking = { id: string; name: string; email: string; contact: string; plan: string };
 

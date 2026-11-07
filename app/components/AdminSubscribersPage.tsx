@@ -112,6 +112,11 @@ export function AdminSubscribersPage() {
 
   // 3-Dots actions menu & Password reset state
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{
+    top?: number;
+    bottom?: number;
+    right: number;
+  } | null>(null);
   const [passwordModalSubscriber, setPasswordModalSubscriber] = useState<Subscriber | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -197,7 +202,7 @@ export function AdminSubscribersPage() {
       .catch(() => undefined);
   }, []);
 
-  // 3. Close 3-dots menu when clicking outside
+  // 3. Close 3-dots menu when clicking outside or scrolling/resizing
   useEffect(() => {
     function handleOutsideClick(e: MouseEvent) {
       const target = e.target as HTMLElement;
@@ -205,8 +210,17 @@ export function AdminSubscribersPage() {
         setActiveMenuId(null);
       }
     }
+    function handleScrollOrResize() {
+      setActiveMenuId(null);
+    }
     document.addEventListener("click", handleOutsideClick);
-    return () => document.removeEventListener("click", handleOutsideClick);
+    window.addEventListener("scroll", handleScrollOrResize, true);
+    window.addEventListener("resize", handleScrollOrResize);
+    return () => {
+      document.removeEventListener("click", handleOutsideClick);
+      window.removeEventListener("scroll", handleScrollOrResize, true);
+      window.removeEventListener("resize", handleScrollOrResize);
+    };
   }, []);
 
   // 4. PSGC Provinces & NCR cities
@@ -235,7 +249,7 @@ export function AdminSubscribersPage() {
         setCityOptions(sortedNcrCities);
         setCities(sortedNcrCities.map((option) => option.name));
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => {
       cancelled = true;
     };
@@ -288,7 +302,7 @@ export function AdminSubscribersPage() {
       const sortedOptions = sortLocations(options);
       setCityOptions(sortedOptions);
       setCities(sortedOptions.map((option) => option.name));
-    } catch {}
+    } catch { }
   }
 
   async function loadBarangays(
@@ -308,7 +322,7 @@ export function AdminSubscribersPage() {
       if (selectedBarangay && names.includes(selectedBarangay)) {
         setBarangay(selectedBarangay);
       }
-    } catch {}
+    } catch { }
   }
 
   // Filter subscribers based on search query, status, and archive state
@@ -410,19 +424,19 @@ export function AdminSubscribersPage() {
           current.map((sub) =>
             sub.id === editingSubscriber.id
               ? {
-                  ...sub,
-                  name: fullName,
-                  email,
-                  contact,
-                  address: fullAddress,
-                  province,
-                  city,
-                  barangay,
-                  street,
-                  zipCode,
-                  plan: formatPlanName(plan),
-                  status,
-                }
+                ...sub,
+                name: fullName,
+                email,
+                contact,
+                address: fullAddress,
+                province,
+                city,
+                barangay,
+                street,
+                zipCode,
+                plan: formatPlanName(plan),
+                status,
+              }
               : sub,
           ),
         );
@@ -701,7 +715,7 @@ export function AdminSubscribersPage() {
                   </td>
                 </tr>
               ) : (
-                rows.map((subscriber, rowIndex) => (
+                rows.map((subscriber) => (
                   <tr className="border-t border-slate-100 hover:bg-slate-50/50 transition-colors" key={subscriber.id}>
                     <td className="px-5 py-4 font-mono text-slate-900">{subscriber.id}</td>
                     <td className="px-5 py-4 font-semibold text-slate-900">
@@ -724,11 +738,10 @@ export function AdminSubscribersPage() {
                     <td className="px-5 py-4 text-slate-500">{subscriber.plan}</td>
                     <td className="px-5 py-4">
                       <span
-                        className={`admin-status-pill rounded-full px-2.5 py-1 text-xs font-bold tracking-wide ${
-                          subscriber.status === "Active"
+                        className={`admin-status-pill rounded-full px-2.5 py-1 text-xs font-bold tracking-wide ${subscriber.status === "Active"
                             ? "bg-emerald-50 text-emerald-500"
                             : "bg-amber-50 text-amber-500"
-                        }`}
+                          }`}
                       >
                         {subscriber.status}
                       </span>
@@ -740,15 +753,24 @@ export function AdminSubscribersPage() {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setActiveMenuId(
-                              activeMenuId === subscriber.id ? null : subscriber.id,
-                            );
+                            if (activeMenuId === subscriber.id) {
+                              setActiveMenuId(null);
+                              return;
+                            }
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const spaceBelow = window.innerHeight - rect.bottom;
+                            const openUp = spaceBelow < 165;
+                            setMenuPosition({
+                              top: openUp ? undefined : rect.bottom + 6,
+                              bottom: openUp ? window.innerHeight - rect.top + 6 : undefined,
+                              right: Math.max(12, window.innerWidth - rect.right),
+                            });
+                            setActiveMenuId(subscriber.id);
                           }}
-                          className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-all cursor-pointer ${
-                            activeMenuId === subscriber.id
+                          className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-all cursor-pointer ${activeMenuId === subscriber.id
                               ? "border-slate-300 bg-slate-100 text-slate-900 shadow-xs"
                               : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 shadow-2xs"
-                          }`}
+                            }`}
                           title="Subscriber actions"
                           aria-label="Subscriber actions"
                           aria-expanded={activeMenuId === subscriber.id}
@@ -756,14 +778,15 @@ export function AdminSubscribersPage() {
                           <MoreHorizontal size={16} />
                         </button>
 
-                        {activeMenuId === subscriber.id && (
+                        {activeMenuId === subscriber.id && menuPosition && (
                           <div
                             onClick={(e) => e.stopPropagation()}
-                            className={`absolute right-0 z-30 w-44 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl ring-1 ring-black/5 ${
-                              rowIndex >= Math.max(1, rows.length - 2) && rows.length > 2
-                                ? "bottom-full mb-1.5 origin-bottom-right"
-                                : "top-full mt-1.5 origin-top-right"
-                            }`}
+                            style={{
+                              top: menuPosition.top,
+                              bottom: menuPosition.bottom,
+                              right: menuPosition.right,
+                            }}
+                            className="subscriber-action-dropdown fixed z-50 w-44 rounded-xl border border-slate-200 bg-white p-1.5 shadow-2xl ring-1 ring-black/5 text-left"
                           >
                             {!subscriber.archived ? (
                               <>
@@ -868,7 +891,7 @@ export function AdminSubscribersPage() {
 
             {editingSubscriber && (
               <div className="px-6 pt-4 pb-1">
-                <div className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
+                <div className="subscriber-summary-card flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
                   {editingSubscriber.image ? (
                     <img
                       src={editingSubscriber.image}
@@ -876,18 +899,18 @@ export function AdminSubscribersPage() {
                       className="h-12 w-12 rounded-full object-cover border border-slate-200 shadow-xs shrink-0"
                     />
                   ) : (
-                    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-blue-100 font-bold text-base text-[#2563eb]">
+                    <div className="subscriber-avatar grid h-12 w-12 shrink-0 place-items-center rounded-full bg-blue-100 font-bold text-base text-[#2563eb]">
                       {editingSubscriber.name.charAt(0).toUpperCase()}
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-slate-900 leading-tight">
+                    <p className="subscriber-name text-xs font-bold text-slate-900 leading-tight">
                       {editingSubscriber.name}
                     </p>
-                    <p className="font-mono text-[11px] text-blue-700 font-semibold">
+                    <p className="subscriber-id font-mono text-[11px] text-blue-700 font-semibold">
                       ID: {editingSubscriber.id}
                     </p>
-                    <p className="text-[11px] text-slate-400 truncate">
+                    <p className="subscriber-email text-[11px] text-slate-400 truncate">
                       {editingSubscriber.email}
                     </p>
                   </div>
@@ -1173,7 +1196,7 @@ export function AdminSubscribersPage() {
 
             {/* Subscriber Info Box */}
             <div className="px-6 pt-5 pb-2">
-              <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3.5 text-xs">
+              <div className="subscriber-summary-card rounded-xl border border-blue-100 bg-blue-50/60 p-3.5 text-xs">
                 <div className="flex items-center justify-between text-slate-500 mb-2">
                   <span className="font-semibold text-slate-600">Subscriber Account</span>
                   <span className="font-mono font-bold text-blue-700 bg-blue-100/70 px-2 py-0.5 rounded-md">
@@ -1188,15 +1211,15 @@ export function AdminSubscribersPage() {
                       className="h-10 w-10 rounded-full object-cover border border-slate-200 shrink-0"
                     />
                   ) : (
-                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-100 font-bold text-xs text-[#2563eb]">
+                    <div className="subscriber-avatar grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-100 font-bold text-xs text-[#2563eb]">
                       {passwordModalSubscriber.name.charAt(0).toUpperCase()}
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <div className="font-bold text-slate-900 text-sm">
+                    <div className="subscriber-name font-bold text-slate-900 text-sm">
                       {passwordModalSubscriber.name}
                     </div>
-                    <div className="text-slate-600 truncate mt-0.5">
+                    <div className="subscriber-email text-slate-600 truncate mt-0.5">
                       {passwordModalSubscriber.email}
                     </div>
                   </div>

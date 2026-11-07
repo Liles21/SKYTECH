@@ -82,7 +82,7 @@ export function AdminReportsPage() {
         </button>
       </div>
 
-      <div className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map(([label, value, trend]) => (
           <article key={label} className="rounded-xl border border-slate-200 bg-white px-6 py-5">
             <p className="text-xs font-bold tracking-wide text-slate-400">{label}</p>
@@ -92,20 +92,37 @@ export function AdminReportsPage() {
         ))}
       </div>
 
-      <div className="mt-7 grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+      <div className="mt-7 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
         <ChartCard title="Monthly Revenue" subtitle="Last 6 months">
-          <div className="mt-7 flex h-56 items-end gap-3 border-b border-slate-100 px-3 sm:gap-6">
+          <div className="mt-7 flex h-56 items-end gap-3 border-b border-slate-100 px-3 pb-2 sm:gap-6">
             {revenueTrend.length ? (
-              revenueTrend.map((entry) => (
-                <div key={entry.label} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
-                  <div
-                    className="w-full max-w-10 rounded-t bg-[#2f67e8] transition-all hover:bg-[#1f54ca]"
-                    style={{ height: `${Math.max(14, (Number(entry.value) / maxRevenue) * 100)}%` }}
-                    title={`${entry.label}: ${formatCurrency(Number(entry.value))}`}
-                  />
-                  <span className="text-xs text-slate-400">{entry.label}</span>
-                </div>
-              ))
+              revenueTrend.map((entry) => {
+                const val = Number(entry.value) || 0;
+                const barHeight = val > 0 ? Math.max(12, (val / maxRevenue) * 100) : 0;
+                return (
+                  <div key={entry.label} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
+                    <div className="relative flex w-full flex-1 items-end justify-center">
+                      {val > 0 ? (
+                        <div
+                          className="relative w-full max-w-10 rounded-t-lg bg-gradient-to-t from-[#2563eb] to-[#38bdf8] transition-all hover:from-[#1f54ca] hover:to-[#0ea5e9]"
+                          style={{ height: `${barHeight}%` }}
+                          title={`${entry.label}: ${formatCurrency(val)}`}
+                        >
+                          <span className="dashboard-badge-blue absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-600">
+                            {formatCurrency(val)}
+                          </span>
+                        </div>
+                      ) : (
+                        <div
+                          className="dashboard-zero-bar h-1 w-full max-w-8 rounded-t bg-slate-200/70"
+                          title={`${entry.label}: ₱0`}
+                        />
+                      )}
+                    </div>
+                    <span className="text-xs font-medium text-slate-400">{entry.label}</span>
+                  </div>
+                );
+              })
             ) : (
               <div className="flex h-full w-full items-center justify-center text-sm text-slate-400">
                 No revenue data yet.

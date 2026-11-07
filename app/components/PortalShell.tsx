@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle,
   BarChart3,
@@ -18,7 +18,9 @@ import {
   LogOut,
   Menu,
   MessageSquare,
+  Moon,
   Settings,
+  Sun,
   Ticket,
   User,
   Users,
@@ -27,6 +29,7 @@ import {
 } from 'lucide-react';
 import { signOut, useSession } from 'next-auth/react';
 import { Spinner } from '@/app/components/Spinner';
+import { setTheme, useTheme } from '@/app/lib/theme';
 
 type Role = 'admin' | 'technician' | 'subscriber';
 type NotificationItem = {
@@ -37,21 +40,6 @@ type NotificationItem = {
   timestamp: string;
   read: boolean;
 };
-
-const themeListeners = new Set<() => void>();
-const subscribeToTheme = (listener: () => void) => {
-  themeListeners.add(listener);
-  return () => themeListeners.delete(listener);
-};
-const getThemeSnapshot = () =>
-  typeof window !== 'undefined' && window.localStorage.getItem('skytech-admin-theme') === 'dark';
-const getServerThemeSnapshot = () => false;
-
-function setTheme(isDark: boolean) {
-  window.localStorage.setItem('skytech-admin-theme', isDark ? 'dark' : 'light');
-  document.documentElement.classList.toggle('admin-dark-mode', isDark);
-  themeListeners.forEach((listener) => listener());
-}
 
 export function PortalShell({ role, children }: { role: Role; children: React.ReactNode }) {
   const { data: session } = useSession();
@@ -132,7 +120,7 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
     path.startsWith('/admin/tickets');
   const [isManageUsersOpen, setIsManageUsersOpen] = useState(true);
 
-  const isDarkMode = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot);
+  const { isDark: isDarkMode } = useTheme();
 
   useEffect(() => {
     document.documentElement.classList.toggle('admin-dark-mode', role === 'admin' && isDarkMode);
@@ -146,8 +134,8 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
     role === 'admin'
       ? '/admin/dashboard'
       : role === 'technician'
-      ? '/technician/my-tasks'
-      : '/subscriber/my-account';
+        ? '/technician/my-tasks'
+        : '/subscriber/my-account';
 
   function requestSignOut() {
     setIsProfileOpen(false);
@@ -261,16 +249,16 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
   const nonAdminLinks: NonAdminLink[] =
     role === 'technician'
       ? [
-          ['/technician/my-tasks', 'Home', LayoutDashboard],
-          ['/technician/tasks', 'My Tasks', Ticket],
-          ['/technician/profile', 'Profile', Users],
-        ]
+        ['/technician/my-tasks', 'Home', LayoutDashboard],
+        ['/technician/tasks', 'My Tasks', Ticket],
+        ['/technician/profile', 'Profile', Users],
+      ]
       : [
-          ['/subscriber/my-account', 'Home', LayoutDashboard],
-          ['/subscriber/pay-bills', 'Pay Bills', CreditCard],
-          ['/subscriber/my-tickets', 'My Requests', Ticket],
-          ['/subscriber/help', 'Help', MessageSquare],
-        ];
+        ['/subscriber/my-account', 'Home', LayoutDashboard],
+        ['/subscriber/pay-bills', 'Pay Bills', CreditCard],
+        ['/subscriber/my-tickets', 'My Requests', Ticket],
+        ['/subscriber/help', 'Help', MessageSquare],
+      ];
 
   const userInitials = (session?.user?.name || '')
     .trim()
@@ -283,11 +271,9 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
 
   return (
     <div
-      className={`portal-shell ${role !== 'admin' ? 'portal-scrollbar-hidden' : ''} ${
-        role === 'admin' && isDarkMode ? 'admin-dark-mode' : ''
-      } min-h-screen overflow-x-hidden text-slate-950 ${
-        role === 'admin' ? 'bg-[#f8fafc]' : 'bg-[#eef4fb]'
-      }`}
+      className={`portal-shell ${role !== 'admin' ? 'portal-scrollbar-hidden' : ''} ${role === 'admin' && isDarkMode ? 'admin-dark-mode' : ''
+        } min-h-screen overflow-x-hidden text-slate-950 ${role === 'admin' ? 'bg-[#f8fafc]' : 'bg-[#eef4fb]'
+        }`}
     >
       {isOpen && (
         <button
@@ -299,12 +285,11 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
 
       {/* -------------------- SIDEBAR -------------------- */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform duration-250 ease-out ${
-          role === 'admin' || isOpen ? 'translate-x-0' : 'lg:translate-x-0 -translate-x-full'
-        }`}
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-[#2d3b56] bg-[#17233b] transition-transform duration-250 ease-out ${isOpen ? 'translate-x-0' : 'lg:translate-x-0 -translate-x-full'
+          }`}
       >
         {/* Top Logo (Links to Dashboard, NOT landing page) */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-5">
+        <div className="flex items-center justify-between border-b border-[#2d3b56] px-5 py-5">
           <Link
             href={homeLink}
             onClick={() => setIsOpen(false)}
@@ -320,7 +305,7 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
               />
             </div>
             <div className="flex flex-col">
-              <span className="text-base font-extrabold tracking-tight text-slate-900 leading-tight">
+              <span className="text-base font-extrabold tracking-tight text-slate-100 leading-tight">
                 Sky-Tech Fiber
               </span>
               <span className="text-[10px] font-semibold text-slate-400 tracking-tight leading-tight mt-0.5">
@@ -332,7 +317,7 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
           <button
             aria-label="Close navigation"
             onClick={() => setIsOpen(false)}
-            className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 lg:hidden"
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-[#111c31] lg:hidden"
           >
             <X size={18} />
           </button>
@@ -346,20 +331,18 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
               <Link
                 href="/admin/dashboard"
                 onClick={() => setIsOpen(false)}
-                className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${
-                  path === '/admin/dashboard'
+                className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${path === '/admin/dashboard'
                     ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
-                }`}
+                  }`}
               >
                 {path === '/admin/dashboard' && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1.5 rounded-r-full bg-[#2563eb] shadow-[0_0_8px_rgba(37,99,235,0.4)]" />
                 )}
                 <LayoutGrid
                   size={19}
-                  className={`transition-transform duration-200 group-hover:scale-110 ${
-                    path === '/admin/dashboard' ? 'text-[#2563eb]' : 'text-slate-500'
-                  }`}
+                  className={`transition-transform duration-200 group-hover:scale-110 ${path === '/admin/dashboard' ? 'text-[#2563eb]' : 'text-slate-500'
+                    }`}
                 />
                 <span>Dashboard</span>
               </Link>
@@ -369,48 +352,42 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                 <button
                   type="button"
                   onClick={() => setIsManageUsersOpen(!isManageUsersOpen)}
-                  className={`group flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${
-                    isUserSectionActive
+                  className={`group flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${isUserSectionActive
                       ? 'text-[#2563eb] font-bold'
                       : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-3.5">
                     <Users
                       size={19}
-                      className={`transition-transform duration-200 group-hover:scale-110 ${
-                        isUserSectionActive ? 'text-[#2563eb]' : 'text-slate-500'
-                      }`}
+                      className={`transition-transform duration-200 group-hover:scale-110 ${isUserSectionActive ? 'text-[#2563eb]' : 'text-slate-500'
+                        }`}
                     />
                     <span>Manage Users</span>
                   </div>
                   <ChevronDown
                     size={16}
-                    className={`text-slate-400 transition-transform duration-200 ${
-                      isManageUsersOpen ? 'rotate-0' : '-rotate-90'
-                    }`}
+                    className={`text-slate-400 transition-transform duration-200 ${isManageUsersOpen ? 'rotate-0' : '-rotate-90'
+                      }`}
                   />
                 </button>
 
                 {/* Sub-items with bullet points */}
                 <div
-                  className={`ml-5 space-y-1 border-l-2 border-slate-100 pl-3 transition-all duration-200 overflow-hidden ${
-                    isManageUsersOpen ? 'max-h-48 my-1 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
-                  }`}
+                  className={`ml-5 space-y-1 border-l-2 border-slate-100 pl-3 transition-all duration-200 overflow-hidden ${isManageUsersOpen ? 'max-h-48 my-1 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
+                    }`}
                 >
                   <Link
                     href="/admin/subscribers"
                     onClick={() => setIsOpen(false)}
-                    className={`group flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs sm:text-sm font-medium transition-all duration-150 hover:translate-x-1 ${
-                      path.startsWith('/admin/subscribers')
+                    className={`group flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs sm:text-sm font-medium transition-all duration-150 hover:translate-x-1 ${path.startsWith('/admin/subscribers')
                         ? 'bg-blue-50/80 font-bold text-[#2563eb]'
                         : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                    }`}
+                      }`}
                   >
                     <span
-                      className={`h-1.5 w-1.5 rounded-full transition-transform duration-150 group-hover:scale-150 ${
-                        path.startsWith('/admin/subscribers') ? 'bg-[#2563eb]' : 'bg-slate-400'
-                      }`}
+                      className={`h-1.5 w-1.5 rounded-full transition-transform duration-150 group-hover:scale-150 ${path.startsWith('/admin/subscribers') ? 'bg-[#2563eb]' : 'bg-slate-400'
+                        }`}
                     />
                     <span>Subscribers</span>
                   </Link>
@@ -418,16 +395,14 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                   <Link
                     href="/admin/technicians"
                     onClick={() => setIsOpen(false)}
-                    className={`group flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs sm:text-sm font-medium transition-all duration-150 hover:translate-x-1 ${
-                      path.startsWith('/admin/technicians')
+                    className={`group flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs sm:text-sm font-medium transition-all duration-150 hover:translate-x-1 ${path.startsWith('/admin/technicians')
                         ? 'bg-blue-50/80 font-bold text-[#2563eb]'
                         : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                    }`}
+                      }`}
                   >
                     <span
-                      className={`h-1.5 w-1.5 rounded-full transition-transform duration-150 group-hover:scale-150 ${
-                        path.startsWith('/admin/technicians') ? 'bg-[#2563eb]' : 'bg-slate-400'
-                      }`}
+                      className={`h-1.5 w-1.5 rounded-full transition-transform duration-150 group-hover:scale-150 ${path.startsWith('/admin/technicians') ? 'bg-[#2563eb]' : 'bg-slate-400'
+                        }`}
                     />
                     <span>Technicians</span>
                   </Link>
@@ -435,16 +410,14 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                   <Link
                     href="/admin/tickets"
                     onClick={() => setIsOpen(false)}
-                    className={`group flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs sm:text-sm font-medium transition-all duration-150 hover:translate-x-1 ${
-                      path.startsWith('/admin/tickets')
+                    className={`group flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs sm:text-sm font-medium transition-all duration-150 hover:translate-x-1 ${path.startsWith('/admin/tickets')
                         ? 'bg-blue-50/80 font-bold text-[#2563eb]'
                         : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                    }`}
+                      }`}
                   >
                     <span
-                      className={`h-1.5 w-1.5 rounded-full transition-transform duration-150 group-hover:scale-150 ${
-                        path.startsWith('/admin/tickets') ? 'bg-[#2563eb]' : 'bg-slate-400'
-                      }`}
+                      className={`h-1.5 w-1.5 rounded-full transition-transform duration-150 group-hover:scale-150 ${path.startsWith('/admin/tickets') ? 'bg-[#2563eb]' : 'bg-slate-400'
+                        }`}
                     />
                     <span>Support</span>
                   </Link>
@@ -455,20 +428,18 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
               <Link
                 href="/admin/billing"
                 onClick={() => setIsOpen(false)}
-                className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${
-                  path.startsWith('/admin/billing')
+                className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${path.startsWith('/admin/billing')
                     ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
-                }`}
+                  }`}
               >
                 {path.startsWith('/admin/billing') && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1.5 rounded-r-full bg-[#2563eb] shadow-[0_0_8px_rgba(37,99,235,0.4)]" />
                 )}
                 <FileText
                   size={19}
-                  className={`transition-transform duration-200 group-hover:scale-110 ${
-                    path.startsWith('/admin/billing') ? 'text-[#2563eb]' : 'text-slate-500'
-                  }`}
+                  className={`transition-transform duration-200 group-hover:scale-110 ${path.startsWith('/admin/billing') ? 'text-[#2563eb]' : 'text-slate-500'
+                    }`}
                 />
                 <span>Billing</span>
               </Link>
@@ -477,20 +448,18 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
               <Link
                 href="/admin/bookings"
                 onClick={() => setIsOpen(false)}
-                className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${
-                  path.startsWith('/admin/bookings')
+                className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${path.startsWith('/admin/bookings')
                     ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
-                }`}
+                  }`}
               >
                 {path.startsWith('/admin/bookings') && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1.5 rounded-r-full bg-[#2563eb] shadow-[0_0_8px_rgba(37,99,235,0.4)]" />
                 )}
                 <CalendarDays
                   size={19}
-                  className={`transition-transform duration-200 group-hover:scale-110 ${
-                    path.startsWith('/admin/bookings') ? 'text-[#2563eb]' : 'text-slate-500'
-                  }`}
+                  className={`transition-transform duration-200 group-hover:scale-110 ${path.startsWith('/admin/bookings') ? 'text-[#2563eb]' : 'text-slate-500'
+                    }`}
                 />
                 <span>Bookings</span>
               </Link>
@@ -499,20 +468,18 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
               <Link
                 href="/admin/installations"
                 onClick={() => setIsOpen(false)}
-                className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${
-                  path.startsWith('/admin/installations')
+                className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${path.startsWith('/admin/installations')
                     ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
-                }`}
+                  }`}
               >
                 {path.startsWith('/admin/installations') && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1.5 rounded-r-full bg-[#2563eb] shadow-[0_0_8px_rgba(37,99,235,0.4)]" />
                 )}
                 <Wrench
                   size={19}
-                  className={`transition-transform duration-200 group-hover:scale-110 ${
-                    path.startsWith('/admin/installations') ? 'text-[#2563eb]' : 'text-slate-500'
-                  }`}
+                  className={`transition-transform duration-200 group-hover:scale-110 ${path.startsWith('/admin/installations') ? 'text-[#2563eb]' : 'text-slate-500'
+                    }`}
                 />
                 <span>Installations</span>
               </Link>
@@ -521,20 +488,18 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
               <Link
                 href="/admin/reports"
                 onClick={() => setIsOpen(false)}
-                className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${
-                  path.startsWith('/admin/reports')
+                className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${path.startsWith('/admin/reports')
                     ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
-                }`}
+                  }`}
               >
                 {path.startsWith('/admin/reports') && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1.5 rounded-r-full bg-[#2563eb] shadow-[0_0_8px_rgba(37,99,235,0.4)]" />
                 )}
                 <BarChart3
                   size={19}
-                  className={`transition-transform duration-200 group-hover:scale-110 ${
-                    path.startsWith('/admin/reports') ? 'text-[#2563eb]' : 'text-slate-500'
-                  }`}
+                  className={`transition-transform duration-200 group-hover:scale-110 ${path.startsWith('/admin/reports') ? 'text-[#2563eb]' : 'text-slate-500'
+                    }`}
                 />
                 <span>Reports</span>
               </Link>
@@ -543,20 +508,18 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
               <Link
                 href="/admin/maintenance"
                 onClick={() => setIsOpen(false)}
-                className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${
-                  path.startsWith('/admin/maintenance')
+                className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${path.startsWith('/admin/maintenance')
                     ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
-                }`}
+                  }`}
               >
                 {path.startsWith('/admin/maintenance') && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1.5 rounded-r-full bg-[#2563eb] shadow-[0_0_8px_rgba(37,99,235,0.4)]" />
                 )}
                 <AlertTriangle
                   size={19}
-                  className={`transition-transform duration-200 group-hover:scale-110 ${
-                    path.startsWith('/admin/maintenance') ? 'text-[#2563eb]' : 'text-slate-500'
-                  }`}
+                  className={`transition-transform duration-200 group-hover:scale-110 ${path.startsWith('/admin/maintenance') ? 'text-[#2563eb]' : 'text-slate-500'
+                    }`}
                 />
                 <span>Maintenance</span>
               </Link>
@@ -568,11 +531,10 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                   key={href}
                   href={href}
                   onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-3 rounded-xl border-l-2 px-3 py-3 text-sm font-semibold transition-all duration-150 ${
-                    path === href
+                  className={`flex items-center gap-3 rounded-xl border-l-2 px-3 py-3 text-sm font-semibold transition-all duration-150 ${path === href
                       ? 'border-[#2563eb] bg-blue-50 text-[#2166f3]'
                       : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-700'
-                  }`}
+                    }`}
                 >
                   <IconComponent size={18} />
                   <span>{label}</span>
@@ -586,9 +548,7 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
 
       {/* -------------------- TOP NAVBAR HEADER -------------------- */}
       <header
-        className={`fixed left-0 lg:left-64 right-0 top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 sm:px-8 backdrop-blur-md transition-all ${
-          role === 'admin' ? 'min-w-5xl' : ''
-        }`}
+        className="fixed right-0 top-0 left-0 lg:left-64 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 sm:px-8 backdrop-blur-md transition-all"
       >
         {/* Left Section: Mobile Menu Toggle & Portal Branding */}
         <div className="flex items-center gap-3">
@@ -607,8 +567,8 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
               {role === 'admin'
                 ? 'Sky-Tech Admin Console'
                 : role === 'technician'
-                ? 'Field Technician Portal'
-                : 'Sky-Tech Fiber Subscriber Portal'}
+                  ? 'Field Technician Portal'
+                  : 'Sky-Tech Fiber Subscriber Portal'}
             </span>
           </div>
         </div>
@@ -664,9 +624,8 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                         type="button"
                         key={item.id}
                         onClick={() => void markNotificationRead(item)}
-                        className={`flex w-full items-start gap-2.5 border-b border-slate-100 px-4 py-3 text-left transition-colors hover:bg-slate-50 cursor-pointer ${
-                          !item.read ? 'bg-[#f7faff]' : 'bg-white'
-                        }`}
+                        className={`flex w-full items-start gap-2.5 border-b border-slate-100 px-4 py-3 text-left transition-colors hover:bg-slate-50 cursor-pointer ${!item.read ? 'bg-[#f7faff]' : 'bg-white'
+                          }`}
                       >
                         <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-blue-50 text-[#2166f3]">
                           <Bell size={15} />
@@ -757,17 +716,16 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                   {role === 'admin'
                     ? 'Administrator'
                     : role === 'technician'
-                    ? 'Technician'
-                    : 'Fiber Active'}
+                      ? 'Technician'
+                      : 'Fiber Active'}
                 </p>
               </div>
 
               {/* Chevron Down Arrow */}
               <ChevronDown
                 size={14}
-                className={`text-slate-400 transition-transform duration-200 group-hover:text-slate-600 ${
-                  isProfileOpen ? 'rotate-180 text-[#2563eb]' : ''
-                }`}
+                className={`text-slate-400 transition-transform duration-200 group-hover:text-slate-600 ${isProfileOpen ? 'rotate-180 text-[#2563eb]' : ''
+                  }`}
               />
             </button>
 
@@ -845,6 +803,30 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                   </div>
                 )}
 
+                {/* Theme Switcher in Profile Menu */}
+                <div className="py-1 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setTheme(!isDarkMode)}
+                    className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      {isDarkMode ? (
+                        <Sun size={15} className="text-amber-400 shrink-0" />
+                      ) : (
+                        <Moon size={15} className="text-indigo-600 shrink-0" />
+                      )}
+                      <span>{isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}</span>
+                    </div>
+                    <span
+                      className={`inline-flex items-center rounded-lg px-2 py-0.5 text-[10px] font-bold ${isDarkMode ? 'bg-amber-400/20 text-amber-300' : 'bg-blue-50 text-blue-700'
+                        }`}
+                    >
+                      {isDarkMode ? 'Dark' : 'Light'}
+                    </span>
+                  </button>
+                </div>
+
                 <hr className="my-1 border-slate-100" />
 
                 {/* Log Out Button */}
@@ -865,20 +847,18 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
       {/* Mobile Bottom Bar for Subscriber/Technician */}
       {role !== 'admin' && (
         <nav
-          className={`fixed inset-x-0 bottom-0 z-50 grid h-16 border-t border-slate-200 bg-white px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(15,23,42,0.06)] lg:hidden ${
-            role === 'subscriber' ? 'grid-cols-4' : 'grid-cols-3'
-          }`}
+          className={`fixed inset-x-0 bottom-0 z-50 grid h-16 border-t border-slate-200 bg-white px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(15,23,42,0.06)] lg:hidden ${role === 'subscriber' ? 'grid-cols-4' : 'grid-cols-3'
+            }`}
         >
           {nonAdminLinks.map(([href, label, IconComponent]) => (
             <Link
               key={href}
               href={href}
               onClick={() => setIsOpen(false)}
-              className={`flex min-w-0 flex-col items-center justify-center gap-1 border-t-2 text-[10px] font-semibold transition-colors duration-150 ${
-                path === href
+              className={`flex min-w-0 flex-col items-center justify-center gap-1 border-t-2 text-[10px] font-semibold transition-colors duration-150 ${path === href
                   ? 'border-[#2166f3] text-[#2166f3]'
                   : 'border-transparent text-slate-400 hover:text-slate-600'
-              }`}
+                }`}
             >
               <IconComponent size={17} />
               <span className="max-w-full truncate">{label}</span>
@@ -891,10 +871,8 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
       <main
         className={`${
           role === 'admin'
-            ? 'min-h-screen ml-64 min-w-5xl pt-16'
-            : `min-h-screen pb-20 lg:pb-0 lg:ml-64 pt-16 ${
-                isFixedMobilePage ? 'max-lg:h-[100svh] max-lg:overflow-hidden max-lg:pb-0' : ''
-              }`
+            ? 'min-h-screen lg:ml-64 min-w-0 pt-16'
+            : `min-h-screen pb-20 lg:pb-0 lg:ml-64 pt-16 ${isFixedMobilePage ? 'max-lg:h-[100svh] max-lg:overflow-hidden max-lg:pb-0' : ''}`
         }`}
       >
         {/* Subscriber Active Maintenance Banner */}
@@ -919,10 +897,10 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
         )}
 
         <div
-          className={`mx-auto max-w-7xl ${
+          className={`mx-auto w-full max-w-7xl ${
             role === 'technician' || role === 'subscriber'
               ? `px-0 lg:pb-0 ${isFixedMobilePage ? 'max-lg:h-full' : ''}`
-              : 'px-10 py-8'
+              : 'px-4 py-5 sm:px-6 lg:px-8 lg:py-7'
           }`}
         >
           {children}

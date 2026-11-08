@@ -46,23 +46,23 @@ export default function PlanDetailsPage() {
 
   return (
     <PortalShell role="subscriber">
-      <div className="bg-[#f8fafc] pb-8 text-slate-900">
+      <div className="w-full max-w-full overflow-x-hidden bg-[#f8fafc] pb-8 text-slate-900">
         {/* Header Banner */}
         <div className="relative overflow-hidden bg-gradient-to-r from-[#173896] via-[#214ebc] to-[#1e3a8a] text-white shadow-lg">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(56,189,248,0.18),transparent_50%)] pointer-events-none" />
 
-          <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-8 lg:px-10">
+          <div className="relative mx-auto max-w-7xl px-4 py-6 sm:px-8 sm:py-8 lg:px-10">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
+              <div className="flex min-w-0 items-center gap-3">
                 <Link
                   href="/subscriber/my-account"
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition-all"
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition-all"
                   aria-label="Back to dashboard"
                 >
                   <ArrowLeft size={20} />
                 </Link>
-                <div>
-                  <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+                <div className="min-w-0">
+                  <h1 className="text-xl font-black tracking-tight text-white sm:text-3xl">
                     Plan Specifications & Details
                   </h1>
                   <p className="mt-1 text-xs sm:text-sm text-blue-100/80">
@@ -72,7 +72,7 @@ export default function PlanDetailsPage() {
               </div>
 
               {/* Logo Badge */}
-              <div className="flex items-center gap-3 rounded-2xl bg-white/10 border border-white/15 px-4 py-2.5 backdrop-blur-md">
+              <div className="flex shrink-0 items-center gap-3 rounded-2xl bg-white/10 border border-white/15 px-3.5 py-2 sm:px-4 sm:py-2.5 backdrop-blur-md">
                 <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-white/60 bg-[#071329] shadow-sm flex items-center justify-center">
                   <Image
                     src="/images/Skytech.jpg"
@@ -94,10 +94,10 @@ export default function PlanDetailsPage() {
         </div>
 
         {/* Content Body */}
-        <div className="mx-auto max-w-7xl px-4 pt-6 pb-2 sm:px-8 lg:px-10">
-          <div className="grid gap-8 lg:grid-cols-12">
+        <div className="mx-auto max-w-7xl px-3.5 pt-5 pb-2 sm:px-8 sm:pt-6 lg:px-10">
+          <div className="grid gap-6 sm:gap-8 lg:grid-cols-12">
             {/* Left: Plan Specifications Card (7 cols) */}
-            <div className="space-y-6 lg:col-span-7">
+            <div className="min-w-0 space-y-6 lg:col-span-7">
               <div className="overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-sm">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-5">
                   <div className="flex items-center gap-3.5">
@@ -172,7 +172,7 @@ export default function PlanDetailsPage() {
             </div>
 
             {/* Right: Billing Cycle & Upgrades (5 cols) */}
-            <div className="space-y-6 lg:col-span-5">
+            <div className="min-w-0 space-y-6 lg:col-span-5">
               {/* Billing Cycle Calendar Info */}
               <div className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm space-y-4">
                 <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">

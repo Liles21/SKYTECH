@@ -82,14 +82,18 @@ export async function GET(request: Request) {
 			const matchedPlan = plans.find((p) => p.name?.replace(/\s+/g, '').toLowerCase() === planClean.replace(/\s+/g, '').toLowerCase());
 			const amount = matchedPlan?.price != null ? Number(matchedPlan.price) : getFallbackPlanPrice(sub.plan);
 
-			const newBill = await prisma.bill.create({
-				data: {
-					id: `BILL-${sub.id}-${currentBillingPeriod}`,
+			const billId = `BILL-${sub.id}-${currentBillingPeriod}`;
+			const dueDate = getMonthlyDueDate(currentDate.getFullYear(), currentDate.getMonth(), billingDay);
+			const newBill = await prisma.bill.upsert({
+				where: { id: billId },
+				update: {},
+				create: {
+					id: billId,
 					subscriberId: sub.id,
 					plan: sub.plan,
 					billingPeriod: currentBillingPeriod,
 					amount,
-					dueDate: getMonthlyDueDate(currentDate.getFullYear(), currentDate.getMonth(), billingDay),
+					dueDate,
 					status: 'Unpaid',
 				},
 				include: { subscriber: { select: { name: true, plan: true } } },

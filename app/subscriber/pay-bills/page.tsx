@@ -197,12 +197,27 @@ export default function PayBillsPage() {
     loadData();
   }, []);
 
-  // Find active unpaid bill (or first bill)
+  const now = new Date();
+  const currentPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const fallbackBill: Bill | undefined = account
+    ? {
+        id: `BILL-${account.id}-${currentPeriod}`,
+        subscriberId: account.id,
+        billingPeriod: currentPeriod,
+        amount: account.monthlyPrice || 599,
+        dueDate: new Date(now.getFullYear(), now.getMonth(), 30).toISOString(),
+        status: 'Unpaid',
+        paymentStatus: 'Unpaid',
+      }
+    : undefined;
+
+  // Find active unpaid bill (or first bill, or fallback bill from account)
   const activeBill =
     bills.find((b) => b.status === 'Unpaid' || b.status === 'Overdue') ||
-    bills[0];
+    bills[0] ||
+    fallbackBill;
 
-  const hasUnpaid = activeBill && activeBill.status !== 'Paid';
+  const hasUnpaid = Boolean(activeBill && activeBill.status !== 'Paid');
   const isPendingReview = Boolean(activeBill && activeBill.paymentStatus === 'Pending_Confirmation');
 
   const copyToClipboard = (text: string, label: string) => {
@@ -348,26 +363,26 @@ export default function PayBillsPage() {
 
   return (
     <PortalShell role="subscriber">
-      <div className="bg-[#f8fafc] pb-8 text-slate-900">
+      <div className="w-full max-w-full overflow-x-hidden bg-[#f8fafc] pb-8 text-slate-900">
         {/* Top Header Banner with Gradient & Brand */}
         <div className="relative overflow-hidden bg-gradient-to-r from-[#173896] via-[#214ebc] to-[#1e3a8a] text-white shadow-lg">
           {/* Subtle Fiber Background Accent */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(56,189,248,0.18),transparent_50%)] pointer-events-none" />
           <div className="absolute right-0 top-0 h-64 w-64 -translate-y-12 translate-x-12 rounded-full bg-blue-400/10 blur-3xl pointer-events-none" />
 
-          <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-8 lg:px-10">
+          <div className="relative mx-auto max-w-7xl px-4 py-6 sm:px-8 sm:py-8 lg:px-10">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
+              <div className="flex min-w-0 items-center gap-3">
                 <Link
                   href="/subscriber/my-account"
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition-all duration-150 hover:-translate-x-0.5"
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition-all duration-150 hover:-translate-x-0.5"
                   aria-label="Back to dashboard"
                 >
                   <ArrowLeft size={20} />
                 </Link>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-xl font-black tracking-tight text-white sm:text-3xl">
                       Billing & Payments
                     </h1>
                     <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300">
@@ -382,7 +397,7 @@ export default function PayBillsPage() {
               </div>
 
               {/* Official Brand Logo from /images/Skytech.jpg */}
-              <div className="flex items-center gap-3 rounded-2xl bg-white/10 border border-white/15 px-4 py-2.5 backdrop-blur-md">
+              <div className="flex shrink-0 items-center gap-3 rounded-2xl bg-white/10 border border-white/15 px-3.5 py-2 sm:px-4 sm:py-2.5 backdrop-blur-md">
                 <div className="h-9 w-9 overflow-hidden rounded-xl bg-white p-0.5 shadow-sm">
                   <Image src="/images/Skytech.jpg" alt="Sky-Tech Fiber Logo" width={36} height={36} className="h-full w-full object-contain rounded-lg" />
                 </div>
@@ -398,18 +413,18 @@ export default function PayBillsPage() {
         </div>
 
         {/* Main Content Body */}
-        <div className="mx-auto max-w-7xl px-4 pt-6 pb-2 sm:px-8 lg:px-10">
+        <div className="mx-auto w-full max-w-7xl px-3.5 pt-5 pb-2 sm:px-8 sm:pt-6 lg:px-10">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 text-slate-400 animate-pulse">
               <div className="h-10 w-10 animate-spin rounded-full border-3 border-[#2563eb] border-t-transparent mb-3" />
               <p className="text-sm font-semibold">Loading your billing details...</p>
             </div>
           ) : (
-            <div className="grid gap-8 lg:grid-cols-12">
+            <div className="grid gap-6 sm:gap-8 lg:grid-cols-12">
               {/* Left Column: Current Invoice Card & Payment Method (7 cols) */}
-              <div className="space-y-6 lg:col-span-7">
+              <div className="min-w-0 space-y-6 lg:col-span-7">
                 {/* 1. CURRENT BILL HERO CARD */}
-                <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-sm transition-all hover:shadow-md">
+                <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-8 shadow-sm transition-all hover:shadow-md">
                   {/* Status Gradient Strip */}
                   <div
                     className={`absolute inset-x-0 top-0 h-2 ${hasUnpaid
@@ -528,9 +543,9 @@ export default function PayBillsPage() {
                 </div>
 
                 {/* 2. PAYMENT METHODS & FORM (Rendered when there is an active bill or payment is requested) */}
-                <div className="overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-sm">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                    <div>
+                <div className="w-full max-w-full overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-4 sm:p-8 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
+                    <div className="min-w-0">
                       <h3 className="text-base font-bold text-slate-900">
                         Select Payment Method
                       </h3>
@@ -538,14 +553,14 @@ export default function PayBillsPage() {
                         Instant payment confirmation available 24/7
                       </p>
                     </div>
-                    <span className="flex items-center gap-1 text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
+                    <span className="inline-flex shrink-0 items-center gap-1 text-[11px] sm:text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
                       <Sparkles size={13} />
                       Zero Convenience Fee
                     </span>
                   </div>
 
                   {/* Payment Method Selector Tabs */}
-                  <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4">
+                  <div className="mt-5 grid grid-cols-2 gap-2.5 sm:gap-4">
                     {[
                       { id: 'GCash', label: 'GCash QR & Transfer', icon: QrCode, popular: true },
                       { id: 'Walk-in', label: 'Office Cash Payment', icon: Building2, popular: false },
@@ -554,7 +569,7 @@ export default function PayBillsPage() {
                         key={tab.id}
                         type="button"
                         onClick={() => setMethod(tab.id as 'GCash' | 'Walk-in')}
-                        className={`relative flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-4 text-center transition-all cursor-pointer ${method === tab.id
+                        className={`relative min-w-0 flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-3 sm:p-4 text-center transition-all cursor-pointer ${method === tab.id
                             ? 'border-[#2563eb] bg-blue-50/70 text-[#2563eb] shadow-sm'
                             : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
                           }`}
@@ -565,7 +580,7 @@ export default function PayBillsPage() {
                           </span>
                         )}
                         <tab.icon size={22} />
-                        <span className="text-xs sm:text-sm font-bold">{tab.label}</span>
+                        <span className="text-xs sm:text-sm font-bold leading-tight">{tab.label}</span>
                       </button>
                     ))}
                   </div>
@@ -573,13 +588,13 @@ export default function PayBillsPage() {
                   {/* Tab Details */}
                   <div className="mt-6">
                     {method === 'GCash' && (
-                      <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50/80 to-indigo-50/40 p-5 space-y-4">
-                        <div className="flex items-center gap-2 font-bold text-blue-900 text-sm">
-                          <Info size={17} className="text-[#2563eb]" />
-                          Pay with GCash QR or Express Send
+                      <div className="overflow-hidden rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50/80 to-indigo-50/40 p-4 sm:p-5 space-y-4">
+                        <div className="flex items-center gap-2 font-bold text-blue-900 text-xs sm:text-sm">
+                          <Info size={17} className="shrink-0 text-[#2563eb]" />
+                          <span>Pay with GCash QR or Express Send</span>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row items-center gap-5 pt-1">
+                        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 pt-1">
                           <div className="shrink-0 flex flex-col items-center">
                             <VisualQr />
                             <p className="mt-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -587,19 +602,19 @@ export default function PayBillsPage() {
                             </p>
                           </div>
 
-                          <div className="flex-1 space-y-3 text-left w-full">
+                          <div className="flex-1 min-w-0 space-y-3 text-left w-full">
                             <div className="rounded-xl bg-white p-3 border border-blue-100 shadow-2xs">
                               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                                 Official GCash Mobile Number
                               </p>
-                              <div className="flex items-center justify-between mt-1">
-                                <span className="font-mono text-base font-bold text-slate-900">
+                              <div className="flex flex-wrap items-center justify-between gap-2 mt-1">
+                                <span className="font-mono text-sm sm:text-base font-bold text-slate-900">
                                   09091423431
                                 </span>
                                 <button
                                   type="button"
                                   onClick={() => copyToClipboard('09091423431', 'gcash')}
-                                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                  className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                                 >
                                   {copiedText === 'gcash' ? (
                                     <>
@@ -620,7 +635,7 @@ export default function PayBillsPage() {
                               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                                 Registered Account Name
                               </p>
-                              <p className="font-bold text-sm text-slate-800 mt-0.5">
+                              <p className="font-bold text-xs sm:text-sm text-slate-800 mt-0.5 break-words">
                                 SKY-TECH FIBER ISP / GALIT ENTERPRISES
                               </p>
                             </div>
@@ -630,25 +645,25 @@ export default function PayBillsPage() {
                     )}
 
                     {method === 'Walk-in' && (
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5 space-y-4">
-                        <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
-                          <Building2 size={18} className="text-[#2563eb]" />
-                          Walk-in Over-The-Counter Payment
+                      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/80 p-4 sm:p-5 space-y-4">
+                        <div className="flex items-center gap-2 font-bold text-slate-900 text-xs sm:text-sm">
+                          <Building2 size={18} className="shrink-0 text-[#2563eb]" />
+                          <span>Walk-in Over-The-Counter Payment</span>
                         </div>
                         <p className="text-xs text-slate-600 leading-relaxed">
                           Pay directly with cash at our main business office. Our customer service representative will issue an official printed receipt immediately.
                         </p>
-                        <div className="rounded-xl bg-white p-4 border border-slate-200 text-xs space-y-3">
+                        <div className="rounded-xl bg-white p-3.5 sm:p-4 border border-slate-200 text-xs space-y-3">
                           <div className="flex items-start gap-2.5 text-slate-800 font-semibold">
                             <MapPin size={16} className="text-[#2563eb] shrink-0 mt-0.5" />
                             <span>Main St., Poblacion, Sibagat, Agusan del Sur</span>
                           </div>
-                          <div className="flex items-center gap-2.5 text-slate-600">
-                            <Clock3 size={16} className="text-slate-400 shrink-0" />
+                          <div className="flex items-start gap-2.5 text-slate-600">
+                            <Clock3 size={16} className="text-slate-400 shrink-0 mt-0.5" />
                             <span>Office Hours: Monday to Saturday, 8:00 AM – 5:00 PM</span>
                           </div>
-                          <div className="flex items-center gap-2.5 text-slate-600">
-                            <Phone size={16} className="text-slate-400 shrink-0" />
+                          <div className="flex items-start gap-2.5 text-slate-600">
+                            <Phone size={16} className="text-slate-400 shrink-0 mt-0.5" />
                             <span>Hotline: (085) 815-2026 / 09091423431</span>
                           </div>
                         </div>
@@ -670,7 +685,7 @@ export default function PayBillsPage() {
                     {paymentError && (
                       <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3.5 text-xs font-medium text-rose-700 flex items-center gap-2">
                         <AlertCircle size={15} className="shrink-0 text-rose-600" />
-                        <span>{paymentError}</span>
+                        <span className="break-words">{paymentError}</span>
                       </div>
                     )}
 
@@ -698,22 +713,22 @@ export default function PayBillsPage() {
 
                     {/* Pending Confirmation Status Card */}
                     {isPendingReview && !isUpdatingPending ? (
-                      <div className="rounded-2xl border border-amber-300 bg-amber-50/90 p-5 space-y-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-3">
+                      <div className="overflow-hidden rounded-2xl border border-amber-300 bg-amber-50/90 p-4 sm:p-5 space-y-4">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="flex min-w-0 items-center gap-3">
                             <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-200 text-amber-800 shrink-0">
                               <Clock3 size={20} />
                             </div>
-                            <div>
-                              <h4 className="text-sm font-bold text-amber-950">
-                                {activeBill.paymentMethod === 'Walk-in' || activeBill.paymentMethod === 'Cash'
+                            <div className="min-w-0">
+                              <h4 className="text-xs sm:text-sm font-bold text-amber-950">
+                                {activeBill?.paymentMethod === 'Walk-in' || activeBill?.paymentMethod === 'Cash'
                                   ? 'Cash Payment Submitted — Awaiting Admin Confirmation'
                                   : 'GCash Payment Submitted — Awaiting Admin Confirmation'}
                               </h4>
-                              <p className="text-xs text-amber-800 font-mono">
-                                {activeBill.paymentMethod === 'Walk-in' || activeBill.paymentMethod === 'Cash'
-                                  ? `OR Number: #${activeBill.referenceNumber}`
-                                  : `Ref: #${activeBill.referenceNumber}`}
+                              <p className="text-xs text-amber-800 font-mono truncate">
+                                {activeBill?.paymentMethod === 'Walk-in' || activeBill?.paymentMethod === 'Cash'
+                                  ? `OR Number: #${activeBill?.referenceNumber}`
+                                  : `Ref: #${activeBill?.referenceNumber}`}
                               </p>
                             </div>
                           </div>
@@ -723,18 +738,18 @@ export default function PayBillsPage() {
                         </div>
 
                         <p className="text-xs text-amber-900/90 leading-relaxed">
-                          Your {activeBill.paymentMethod === 'Walk-in' || activeBill.paymentMethod === 'Cash' ? 'cash payment receipt' : 'GCash receipt'} and transaction number have been sent to our admin billing team for verification. Once confirmed by the admin, your due bill will automatically be cleared.
+                          Your {activeBill?.paymentMethod === 'Walk-in' || activeBill?.paymentMethod === 'Cash' ? 'cash payment receipt' : 'GCash receipt'} and transaction number have been sent to our admin billing team for verification. Once confirmed by the admin, your due bill will automatically be cleared.
                         </p>
 
                         {/* Uploaded Receipt Preview */}
-                        {(receiptPreview || activeBill.receiptImage) && (
+                        {(receiptPreview || activeBill?.receiptImage) && (
                           <div className="rounded-xl border border-amber-200 bg-white p-3 space-y-1.5">
                             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                              Uploaded {activeBill.paymentMethod === 'Walk-in' || activeBill.paymentMethod === 'Cash' ? 'Cash Official Receipt' : 'GCash Receipt'}
+                              Uploaded {activeBill?.paymentMethod === 'Walk-in' || activeBill?.paymentMethod === 'Cash' ? 'Cash Official Receipt' : 'GCash Receipt'}
                             </p>
                             <div className="relative h-48 w-full overflow-hidden rounded-lg bg-slate-900 flex items-center justify-center">
                               <img
-                                src={receiptPreview || activeBill.receiptImage || ''}
+                                src={receiptPreview || activeBill?.receiptImage || ''}
                                 alt="Uploaded Payment Receipt"
                                 className="h-full w-full object-contain"
                               />
@@ -747,7 +762,7 @@ export default function PayBillsPage() {
                             type="button"
                             onClick={() => {
                               setIsUpdatingPending(true);
-                              setReferenceNumber(activeBill.referenceNumber || '');
+                              setReferenceNumber(activeBill?.referenceNumber || '');
                             }}
                             className="text-xs font-bold text-amber-900 hover:text-amber-950 underline cursor-pointer"
                           >
@@ -757,7 +772,7 @@ export default function PayBillsPage() {
                       </div>
                     ) : (
                       /* Payment Submission Form */
-                      <form onSubmit={handlePayment} className="space-y-4">
+                      <form onSubmit={handlePayment} className="w-full max-w-full space-y-4">
                         {isUpdatingPending && (
                           <div className="flex items-center justify-between rounded-xl bg-blue-50 border border-blue-200 px-3.5 py-2 text-xs font-semibold text-blue-800">
                             <span>Updating {method === 'GCash' ? 'GCash' : 'Cash'} Payment Proof</span>
@@ -772,7 +787,7 @@ export default function PayBillsPage() {
                         )}
 
                         {/* 1. Upload Receipt Field (For both GCash and Cash/Walk-in) */}
-                        <div>
+                        <div className="min-w-0">
                           <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                             {method === 'GCash'
                               ? 'Upload GCash Payment Receipt / Screenshot *'
@@ -780,16 +795,16 @@ export default function PayBillsPage() {
                           </label>
 
                           {receiptPreview || (isUpdatingPending && activeBill?.receiptImage && !receiptFile) ? (
-                            <div className="relative rounded-2xl border-2 border-slate-200 bg-slate-50 p-3">
-                              <div className="flex items-center gap-3">
-                                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-900 border border-slate-200 flex items-center justify-center">
+                            <div className="relative w-full max-w-full overflow-hidden rounded-2xl border-2 border-slate-200 bg-slate-50 p-3">
+                              <div className="flex min-w-0 items-center gap-3">
+                                <div className="relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-xl bg-slate-900 border border-slate-200 flex items-center justify-center">
                                   <img
                                     src={receiptPreview || activeBill?.receiptImage || ''}
                                     alt="Receipt preview"
                                     className="h-full w-full object-contain"
                                   />
                                 </div>
-                                <div className="flex-1 min-w-0">
+                                <div className="w-0 flex-1 min-w-0 overflow-hidden">
                                   <p className="text-xs font-bold text-slate-800 truncate">
                                     {receiptFile?.name ||
                                       (method === 'GCash'
@@ -813,7 +828,7 @@ export default function PayBillsPage() {
                                   type="button"
                                   onClick={removeReceipt}
                                   title="Remove receipt"
-                                  className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                                  className="shrink-0 p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
                                 >
                                   <Trash2 size={16} />
                                 </button>
@@ -822,7 +837,7 @@ export default function PayBillsPage() {
                           ) : (
                             <div
                               onClick={() => receiptInputRef.current?.click()}
-                              className="group relative cursor-pointer rounded-2xl border-2 border-dashed border-slate-300 hover:border-blue-500 bg-slate-50 hover:bg-blue-50/50 p-6 text-center transition"
+                              className="group relative cursor-pointer rounded-2xl border-2 border-dashed border-slate-300 hover:border-blue-500 bg-slate-50 hover:bg-blue-50/50 p-5 sm:p-6 text-center transition"
                             >
                               <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-white border border-slate-200 shadow-2xs text-[#2563eb] group-hover:scale-105 transition">
                                 <Upload size={20} />
@@ -840,7 +855,7 @@ export default function PayBillsPage() {
                         </div>
 
                         {/* 2. Reference / Transaction Number Field */}
-                        <div>
+                        <div className="min-w-0">
                           <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                             {method === 'Walk-in'
                               ? 'Official Receipt (OR) Number *'
@@ -855,7 +870,7 @@ export default function PayBillsPage() {
                                 ? 'e.g. 1002938472910 (13-digit GCash Ref)'
                                 : 'e.g. OR-2026-9482 (Office Receipt No.)'
                             }
-                            className="w-full rounded-xl border border-slate-200 px-4 py-3 font-mono text-sm outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-blue-100 transition-all bg-white"
+                            className="w-full max-w-full rounded-xl border border-slate-200 px-3.5 py-3 sm:px-4 font-mono text-xs sm:text-sm outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-blue-100 transition-all bg-white"
                           />
                           <p className="text-[11px] text-slate-400 mt-1">
                             {method === 'GCash'
@@ -867,7 +882,7 @@ export default function PayBillsPage() {
                         {/* Auto-deduct information tip */}
                         <div className="rounded-xl bg-blue-50/70 border border-blue-200/80 p-3 text-xs text-blue-900 leading-relaxed flex items-start gap-2">
                           <Info size={16} className="text-blue-600 shrink-0 mt-0.5" />
-                          <span>
+                          <span className="min-w-0 break-words">
                             Once submitted, the admin will verify your receipt and reference number. Upon admin confirmation, your due bill will automatically be cleared.
                           </span>
                         </div>
@@ -875,21 +890,21 @@ export default function PayBillsPage() {
                         {/* Submit Button */}
                         <button
                           type="submit"
-                          disabled={isSubmitting || !hasUnpaid}
-                          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#2563eb] px-6 py-4 text-base font-bold text-white shadow-md shadow-blue-500/20 hover:bg-blue-700 disabled:opacity-50 transition-all cursor-pointer"
+                          disabled={isSubmitting || (!hasUnpaid && !isUpdatingPending)}
+                          className="inline-flex w-full max-w-full items-center justify-center gap-2 rounded-2xl bg-[#2563eb] px-4 py-3.5 sm:px-6 sm:py-4 text-sm sm:text-base font-bold text-white text-center shadow-md shadow-blue-500/20 hover:bg-blue-700 disabled:opacity-50 transition-all cursor-pointer"
                         >
                           {isSubmitting ? (
                             <>
-                              <Loader2 size={18} className="animate-spin text-white" />
-                              <span>Uploading & Submitting Proof...</span>
+                              <Loader2 size={18} className="shrink-0 animate-spin text-white" />
+                              <span className="truncate">Uploading & Submitting Proof...</span>
                             </>
                           ) : (
                             <>
-                              <CreditCard size={18} />
-                              <span>
+                              <CreditCard size={18} className="shrink-0" />
+                              <span className="truncate">
                                 {isUpdatingPending
                                   ? `Update ${method === 'GCash' ? 'GCash' : 'Cash'} Payment Proof`
-                                  : hasUnpaid
+                                  : hasUnpaid && activeBill
                                     ? `Submit ${method === 'GCash' ? 'GCash' : 'Cash'} Payment (₱${Number(activeBill.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })})`
                                     : 'All Bills Paid (No Payment Due)'}
                               </span>
@@ -903,7 +918,7 @@ export default function PayBillsPage() {
               </div>
 
               {/* Right Column: Statement History & Account Summary (5 cols) */}
-              <div className="space-y-6 lg:col-span-5">
+              <div className="min-w-0 space-y-6 lg:col-span-5">
                 {/* Account Snapshot Card */}
                 <div className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm">
                   <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">

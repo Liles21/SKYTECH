@@ -898,7 +898,7 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
       <main
         className={`${role === 'admin'
             ? 'min-h-screen lg:ml-64 min-w-0 pt-16'
-            : `min-h-screen pb-20 lg:pb-0 lg:ml-64 pt-16 ${isFixedMobilePage ? 'max-lg:h-[100svh] max-lg:overflow-hidden max-lg:pb-0' : ''}`
+            : `min-h-screen min-w-0 max-w-full overflow-x-hidden pb-20 lg:pb-0 lg:ml-64 pt-16 ${isFixedMobilePage ? 'max-lg:h-[100svh] max-lg:overflow-hidden max-lg:pb-0' : ''}`
           }`}
       >
         {/* Subscriber Active Maintenance Banner */}
@@ -923,7 +923,7 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
         )}
 
         <div
-          className={`mx-auto w-full max-w-7xl ${role === 'technician' || role === 'subscriber'
+          className={`mx-auto w-full max-w-7xl min-w-0 ${role === 'technician' || role === 'subscriber'
               ? `px-0 lg:pb-0 ${isFixedMobilePage ? 'max-lg:h-full' : ''}`
               : 'px-4 py-5 sm:px-6 lg:px-8 lg:py-7'
             }`}

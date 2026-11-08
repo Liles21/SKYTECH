@@ -519,9 +519,9 @@ export default function SubscriberProfilePage() {
           </div>
 
           {/* -------------------- TWO COLUMN DETAILS GRID -------------------- */}
-          <div className="grid gap-8 lg:grid-cols-12">
+          <div className="grid gap-6 sm:gap-8 lg:grid-cols-12">
             {/* Left Column (7 cols): Personal Details, Registered Installation Address */}
-            <div className="space-y-6 lg:col-span-7">
+            <div className="min-w-0 space-y-6 lg:col-span-7">
               {/* Card 1: Personal & Contact Information */}
               <div className="overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
@@ -641,7 +641,7 @@ export default function SubscriberProfilePage() {
             </div>
 
             {/* Right Column (5 cols): Subscription & Local Support */}
-            <div className="space-y-6 lg:col-span-5">
+            <div className="min-w-0 space-y-6 lg:col-span-5">
               {/* Card 3: Plan & Bandwidth Summary */}
               <div className="relative overflow-hidden rounded-3xl border border-blue-200/80 bg-gradient-to-b from-[#0a192f] via-[#0b1d3a] to-[#071329] p-6 sm:p-7 text-white shadow-md">
                 <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-sky-500/20 blur-2xl pointer-events-none" />

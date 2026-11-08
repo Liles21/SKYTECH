@@ -305,7 +305,7 @@ export default function SubscriberAccount() {
 
   return (
     <PortalShell role="subscriber">
-      <div className="bg-[#f8fafc] pb-8 text-slate-900">
+      <div className="w-full max-w-full overflow-x-hidden bg-[#f8fafc] pb-8 text-slate-900">
         {/* ----------------- TOP WELCOME HERO BANNER ----------------- */}
         <div className="relative overflow-hidden bg-gradient-to-r from-[#173896] via-[#214ebc] to-[#1e3a8a] text-white shadow-lg">
           {/* Subtle Ambient Radial Lighting */}
@@ -534,9 +534,9 @@ export default function SubscriberAccount() {
           </div>
 
           {/* Two-Column Grid: Transactions + Requests */}
-          <div className="grid gap-8 lg:grid-cols-2">
+          <div className="grid gap-6 sm:gap-8 lg:grid-cols-2">
             {/* 1. Transaction & Billing History */}
-            <div className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm">
+            <div className="min-w-0 rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div>
                   <h3 className="text-base font-bold text-slate-900">Billing History</h3>
@@ -601,7 +601,7 @@ export default function SubscriberAccount() {
             </div>
 
             {/* 2. Service Requests & Installations */}
-            <div className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm">
+            <div className="min-w-0 rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div>
                   <h3 className="text-base font-bold text-slate-900">Service Requests</h3>

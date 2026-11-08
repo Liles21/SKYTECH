@@ -106,7 +106,37 @@ export function AdminBillingPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setManualReceiptFile(file);
-    setManualReceiptPreview(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const img = new window.Image();
+      img.onerror = () => setManualReceiptPreview(dataUrl);
+      img.onload = () => {
+        const maxDim = 1280;
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          setManualReceiptPreview(dataUrl);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        setManualReceiptPreview(canvas.toDataURL('image/jpeg', 0.82));
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
   };
 
   // Fetch all bills from API
@@ -269,18 +299,17 @@ export function AdminBillingPage() {
     if (!manualPayBill) return;
     setIsProcessing(true);
     try {
-      const formData = new FormData();
-      formData.append('paymentMethod', manualMethod);
-      formData.append('referenceNumber', manualRef.trim() || `OFFICE-${Date.now().toString().slice(-6)}`);
-      if (manualReceiptFile) {
-        formData.append('receipt', manualReceiptFile);
-      }
-
-      const response = await fetch(`/api/bills/${manualPayBill.id}/confirm`, {
+      const refNum = manualRef.trim() || `OFFICE-${Date.now().toString().slice(-6)}`;
+      const response = await fetch(`/api/bills/${encodeURIComponent(manualPayBill.id)}/confirm`, {
         method: 'PUT',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentMethod: manualMethod,
+          referenceNumber: refNum,
+          receiptImage: manualReceiptPreview || undefined,
+        }),
       });
-      const result = await response.json();
+      const result = await response.json().catch(() => ({}));
       if (response.ok) {
         setBills((prev) =>
           prev.map((b) =>
@@ -290,7 +319,7 @@ export function AdminBillingPage() {
                   status: 'Paid',
                   paymentStatus: 'Paid',
                   paymentMethod: manualMethod,
-                  referenceNumber: manualRef.trim() || b.referenceNumber,
+                  referenceNumber: refNum,
                   receiptImage: result.data?.receiptImage || manualReceiptPreview || b.receiptImage,
                   paidAt: new Date().toISOString(),
                 }

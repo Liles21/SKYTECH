@@ -1,41 +1,84 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { requireRole } from '@/app/lib/api';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
+
+function getFallbackPlanPrice(plan: string): number {
+  const normalized = plan.toLowerCase();
+  if (normalized.includes('300')) return 1499;
+  if (normalized.includes('200')) return 1299;
+  if (normalized.includes('100')) return 999;
+  if (normalized.includes('50')) return 799;
+  if (normalized.includes('25')) return 599;
+  return 999;
+}
 
 export async function PUT(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const access = await requireRole(['admin', 'subscriber']);
-  if (access.response) return access.response;
-
-  const { id } = await context.params;
-  const isSubscriber = access.session?.user?.role === 'subscriber';
-  const subscriberId = access.session?.user?.subscriberId;
-  const userEmail = access.session?.user?.email;
-
-  const existing = await prisma.bill.findUnique({
-    where: { id },
-    include: { subscriber: { select: { id: true, name: true, email: true } } },
-  });
-
-  if (!existing) {
-    return NextResponse.json({ data: null, error: 'Bill not found.' }, { status: 404 });
-  }
-
-  // If subscriber, ensure this bill belongs to them
-  if (isSubscriber) {
-    const isOwner =
-      existing.subscriberId === subscriberId ||
-      (userEmail && existing.subscriber?.email?.toLowerCase() === userEmail.toLowerCase());
-    if (!isOwner) {
-      return NextResponse.json({ data: null, error: 'Unauthorized to pay this bill.' }, { status: 403 });
-    }
-  }
-
   try {
+    const access = await requireRole(['admin', 'subscriber']);
+    if (access.response) return access.response;
+
+    const { id } = await context.params;
+    const isSubscriber = access.session?.user?.role === 'subscriber';
+    const subscriberId = access.session?.user?.subscriberId;
+    const userEmail = access.session?.user?.email;
+
+    let existing = await prisma.bill.findUnique({
+      where: { id },
+      include: { subscriber: { select: { id: true, name: true, email: true } } },
+    });
+
+    // If bill record was not yet persisted, auto-initialize if ID matches BILL-{subId}-{YYYY-MM}
+    if (!existing) {
+      const match = id.match(/^BILL-(.+)-(\d{4}-\d{2})$/);
+      if (match) {
+        const [, parsedSubId, billingPeriod] = match;
+        const sub = await prisma.subscriber.findUnique({ where: { id: parsedSubId } });
+        if (sub) {
+          const [yearStr, monthStr] = billingPeriod.split('-');
+          const dueDate = new Date(Date.UTC(Number(yearStr), Number(monthStr) - 1, 30, 12, 0, 0, 0));
+          existing = await prisma.bill.create({
+            data: {
+              id,
+              subscriberId: sub.id,
+              plan: sub.plan,
+              billingPeriod,
+              amount: getFallbackPlanPrice(sub.plan),
+              dueDate,
+              status: 'Unpaid',
+              paymentStatus: 'Unpaid',
+            },
+            include: { subscriber: { select: { id: true, name: true, email: true } } },
+          });
+        }
+      }
+    }
+
+    if (!existing) {
+      return NextResponse.json({ data: null, error: 'Bill not found.' }, { status: 404 });
+    }
+
+    // If subscriber, ensure this bill belongs to them
+    if (isSubscriber) {
+      let resolvedSubId = subscriberId;
+      if (!resolvedSubId && userEmail) {
+        const matchedSub = await prisma.subscriber.findFirst({
+          where: { email: { equals: userEmail, mode: 'insensitive' } },
+          select: { id: true },
+        });
+        if (matchedSub) resolvedSubId = matchedSub.id;
+      }
+
+      const isOwner =
+        existing.subscriberId === resolvedSubId ||
+        (userEmail && existing.subscriber?.email?.toLowerCase() === userEmail.toLowerCase());
+      if (!isOwner) {
+        return NextResponse.json({ data: null, error: 'Unauthorized to pay this bill.' }, { status: 403 });
+      }
+    }
+
     const contentType = request.headers.get('content-type') || '';
     let paymentMethod = 'GCash';
     let referenceNumber = '';
@@ -48,27 +91,28 @@ export async function PUT(
       referenceNumber = (formData.get('referenceNumber') as string) || '';
       action = (formData.get('action') as string) || '';
 
-      const file = formData.get('receipt') as File | null;
-      if (file && file.size > 0) {
-        const bytes = await file.arrayBuffer();
+      const receiptImageField = formData.get('receiptImage');
+      if (typeof receiptImageField === 'string' && receiptImageField.trim()) {
+        receiptUrl = receiptImageField.trim();
+      }
+
+      const file = formData.get('receipt');
+      if (
+        !receiptUrl?.startsWith('data:') &&
+        file &&
+        typeof file === 'object' &&
+        'arrayBuffer' in file &&
+        (file as Blob).size > 0
+      ) {
+        const blob = file as File;
+        const bytes = await blob.arrayBuffer();
         const buffer = Buffer.from(bytes);
-
-        let ext = 'jpg';
-        if (file.type === 'image/png') ext = 'png';
-        else if (file.type === 'image/webp') ext = 'webp';
-        else if (file.type === 'image/jpeg') ext = 'jpg';
-
-        const safeId = id.replace(/[^a-zA-Z0-9_-]/g, '_');
-        const filename = `receipt-${safeId}-${Date.now()}.${ext}`;
-        const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'receipts');
-        await mkdir(uploadsDir, { recursive: true });
-        const filepath = path.join(uploadsDir, filename);
-        await writeFile(filepath, buffer);
-
-        receiptUrl = `/uploads/receipts/${filename}`;
+        const mimeType =
+          blob.type && blob.type.startsWith('image/') ? blob.type : 'image/jpeg';
+        receiptUrl = `data:${mimeType};base64,${buffer.toString('base64')}`;
       }
     } else {
-      const body = await request.json();
+      const body = await request.json().catch(() => ({}));
       paymentMethod = body.paymentMethod || 'GCash';
       referenceNumber = body.referenceNumber || '';
       action = body.action || '';
@@ -110,7 +154,7 @@ export async function PUT(
       return NextResponse.json({ data: confirmedBill, error: null });
     }
 
-    // Subscriber GCash payment submission
+    // Subscriber GCash / Walk-in payment submission
     if (!referenceNumber.trim()) {
       return NextResponse.json(
         { data: null, error: 'Reference / Transaction Number is required.' },

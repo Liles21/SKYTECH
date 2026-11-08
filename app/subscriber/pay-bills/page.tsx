@@ -211,8 +211,45 @@ export default function PayBillsPage() {
     setTimeout(() => setCopiedText(null), 2500);
   };
 
+  // Compress receipt image into a lightweight Data URL so uploads never exceed serverless body limits
+  const compressReceiptToDataUrl = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Failed to read image file.'));
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        const img = new window.Image();
+        img.onerror = () => resolve(dataUrl);
+        img.onload = () => {
+          const maxDim = 1280;
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(dataUrl);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.82));
+        };
+        img.src = dataUrl;
+      };
+      reader.readAsDataURL(file);
+    });
+
   // Handle receipt image selection
-  const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleReceiptChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
@@ -225,8 +262,12 @@ export default function PayBillsPage() {
     }
     setPaymentError('');
     setReceiptFile(file);
-    const url = URL.createObjectURL(file);
-    setReceiptPreview(url);
+    try {
+      const compressedDataUrl = await compressReceiptToDataUrl(file);
+      setReceiptPreview(compressedDataUrl);
+    } catch {
+      setReceiptPreview(URL.createObjectURL(file));
+    }
   };
 
   const removeReceipt = () => {
@@ -258,19 +299,25 @@ export default function PayBillsPage() {
     setPaymentError('');
 
     try {
-      const formData = new FormData();
-      formData.append('paymentMethod', method);
-      formData.append('referenceNumber', referenceNumber.trim());
-      if (receiptFile) {
-        formData.append('receipt', receiptFile);
+      let receiptImageData = receiptPreview && receiptPreview.startsWith('data:')
+        ? receiptPreview
+        : activeBill.receiptImage || null;
+
+      if (receiptFile && (!receiptImageData || !receiptImageData.startsWith('data:'))) {
+        receiptImageData = await compressReceiptToDataUrl(receiptFile);
       }
 
-      const response = await fetch(`/api/bills/${activeBill.id}/pay`, {
+      const response = await fetch(`/api/bills/${encodeURIComponent(activeBill.id)}/pay`, {
         method: 'PUT',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentMethod: method,
+          referenceNumber: referenceNumber.trim(),
+          receiptImage: receiptImageData,
+        }),
       });
 
-      const result = await response.json();
+      const result = await response.json().catch(() => ({ error: 'Payment submission failed.' }));
       if (!response.ok) {
         setPaymentError(result.error || 'Payment submission failed.');
       } else {
@@ -278,7 +325,7 @@ export default function PayBillsPage() {
           ...activeBill,
           paymentMethod: method,
           referenceNumber: referenceNumber.trim(),
-          receiptImage: receiptPreview || activeBill.receiptImage,
+          receiptImage: receiptImageData || receiptPreview || activeBill.receiptImage,
           paymentStatus: 'Pending_Confirmation',
         };
         if (updatedBill.status === 'Paid') {

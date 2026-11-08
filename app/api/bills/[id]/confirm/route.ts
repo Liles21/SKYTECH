@@ -1,28 +1,26 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { requireRole } from '@/app/lib/api';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
 
 export async function PUT(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const access = await requireRole(['admin']);
-  if (access.response) return access.response;
-
-  const { id } = await context.params;
-
-  const existing = await prisma.bill.findUnique({
-    where: { id },
-    include: { subscriber: { select: { id: true, name: true, email: true } } },
-  });
-
-  if (!existing) {
-    return NextResponse.json({ data: null, error: 'Bill record not found.' }, { status: 404 });
-  }
-
   try {
+    const access = await requireRole(['admin']);
+    if (access.response) return access.response;
+
+    const { id } = await context.params;
+
+    const existing = await prisma.bill.findUnique({
+      where: { id },
+      include: { subscriber: { select: { id: true, name: true, email: true } } },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ data: null, error: 'Bill record not found.' }, { status: 404 });
+    }
+
     const contentType = request.headers.get('content-type') || '';
     let referenceNumber = existing.referenceNumber || '';
     let paymentMethod = existing.paymentMethod || 'Walk-in';
@@ -33,23 +31,25 @@ export async function PUT(
       referenceNumber = (formData.get('referenceNumber') as string) || referenceNumber;
       paymentMethod = (formData.get('paymentMethod') as string) || paymentMethod;
 
-      const file = formData.get('receipt') as File | null;
-      if (file && file.size > 0) {
-        const bytes = await file.arrayBuffer();
+      const receiptImageField = formData.get('receiptImage');
+      if (typeof receiptImageField === 'string' && receiptImageField.trim()) {
+        receiptUrl = receiptImageField.trim();
+      }
+
+      const file = formData.get('receipt');
+      if (
+        !receiptUrl?.startsWith('data:') &&
+        file &&
+        typeof file === 'object' &&
+        'arrayBuffer' in file &&
+        (file as Blob).size > 0
+      ) {
+        const blob = file as File;
+        const bytes = await blob.arrayBuffer();
         const buffer = Buffer.from(bytes);
-
-        let ext = 'jpg';
-        if (file.type === 'image/png') ext = 'png';
-        else if (file.type === 'image/webp') ext = 'webp';
-
-        const safeId = id.replace(/[^a-zA-Z0-9_-]/g, '_');
-        const filename = `receipt-${safeId}-${Date.now()}.${ext}`;
-        const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'receipts');
-        await mkdir(uploadsDir, { recursive: true });
-        const filepath = path.join(uploadsDir, filename);
-        await writeFile(filepath, buffer);
-
-        receiptUrl = `/uploads/receipts/${filename}`;
+        const mimeType =
+          blob.type && blob.type.startsWith('image/') ? blob.type : 'image/jpeg';
+        receiptUrl = `data:${mimeType};base64,${buffer.toString('base64')}`;
       }
     } else {
       const body = await request.json().catch(() => ({}));

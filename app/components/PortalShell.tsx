@@ -338,8 +338,8 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                   setIsManageUsersOpen(false);
                 }}
                 className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${path === '/admin/dashboard'
-                    ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
+                  ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
                   }`}
               >
                 {path === '/admin/dashboard' && (
@@ -359,8 +359,8 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                   type="button"
                   onClick={() => setIsManageUsersOpen(!isManageUsersOpen)}
                   className={`group flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${isUserSectionActive
-                      ? 'text-[#2563eb] font-bold'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
+                    ? 'text-[#2563eb] font-bold'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
                     }`}
                 >
                   <div className="flex items-center gap-3.5">
@@ -387,8 +387,8 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                     href="/admin/subscribers"
                     onClick={() => setIsOpen(false)}
                     className={`group flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs sm:text-sm font-medium transition-all duration-150 hover:translate-x-1 ${path.startsWith('/admin/subscribers')
-                        ? 'bg-blue-50/80 font-bold text-[#2563eb]'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                      ? 'bg-blue-50/80 font-bold text-[#2563eb]'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                   >
                     <span
@@ -402,8 +402,8 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                     href="/admin/technicians"
                     onClick={() => setIsOpen(false)}
                     className={`group flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs sm:text-sm font-medium transition-all duration-150 hover:translate-x-1 ${path.startsWith('/admin/technicians')
-                        ? 'bg-blue-50/80 font-bold text-[#2563eb]'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                      ? 'bg-blue-50/80 font-bold text-[#2563eb]'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                   >
                     <span
@@ -417,8 +417,8 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                     href="/admin/tickets"
                     onClick={() => setIsOpen(false)}
                     className={`group flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs sm:text-sm font-medium transition-all duration-150 hover:translate-x-1 ${path.startsWith('/admin/tickets')
-                        ? 'bg-blue-50/80 font-bold text-[#2563eb]'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                      ? 'bg-blue-50/80 font-bold text-[#2563eb]'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                   >
                     <span
@@ -438,8 +438,8 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                   setIsManageUsersOpen(false);
                 }}
                 className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${path.startsWith('/admin/billing')
-                    ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
+                  ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
                   }`}
               >
                 {path.startsWith('/admin/billing') && (
@@ -461,8 +461,8 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                   setIsManageUsersOpen(false);
                 }}
                 className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${path.startsWith('/admin/bookings')
-                    ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
+                  ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
                   }`}
               >
                 {path.startsWith('/admin/bookings') && (
@@ -484,8 +484,8 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                   setIsManageUsersOpen(false);
                 }}
                 className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${path.startsWith('/admin/installations')
-                    ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
+                  ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
                   }`}
               >
                 {path.startsWith('/admin/installations') && (
@@ -507,8 +507,8 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                   setIsManageUsersOpen(false);
                 }}
                 className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${path.startsWith('/admin/reports')
-                    ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
+                  ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
                   }`}
               >
                 {path.startsWith('/admin/reports') && (
@@ -530,8 +530,8 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                   setIsManageUsersOpen(false);
                 }}
                 className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 ${path.startsWith('/admin/maintenance')
-                    ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
+                  ? 'bg-blue-50/90 font-bold text-[#2563eb] shadow-sm shadow-blue-500/5'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5'
                   }`}
               >
                 {path.startsWith('/admin/maintenance') && (
@@ -553,8 +553,8 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                   href={href}
                   onClick={() => setIsOpen(false)}
                   className={`flex items-center gap-3 rounded-xl border-l-2 px-3 py-3 text-sm font-semibold transition-all duration-150 ${path === href
-                      ? 'border-[#2563eb] bg-blue-50 text-[#2166f3]'
-                      : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                    ? 'border-[#2563eb] bg-blue-50 text-[#2166f3]'
+                    : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                     }`}
                 >
                   <IconComponent size={18} />
@@ -883,8 +883,8 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
               href={href}
               onClick={() => setIsOpen(false)}
               className={`flex min-w-0 flex-col items-center justify-center gap-1 border-t-2 text-[10px] font-semibold transition-colors duration-150 ${path === href
-                  ? 'border-[#2166f3] text-[#2166f3]'
-                  : 'border-transparent text-slate-400 hover:text-slate-600'
+                ? 'border-[#2166f3] text-[#2166f3]'
+                : 'border-transparent text-slate-400 hover:text-slate-600'
                 }`}
             >
               <IconComponent size={17} />
@@ -896,11 +896,10 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
 
       {/* Main Content Area */}
       <main
-        className={`${
-          role === 'admin'
+        className={`${role === 'admin'
             ? 'min-h-screen lg:ml-64 min-w-0 pt-16'
             : `min-h-screen pb-20 lg:pb-0 lg:ml-64 pt-16 ${isFixedMobilePage ? 'max-lg:h-[100svh] max-lg:overflow-hidden max-lg:pb-0' : ''}`
-        }`}
+          }`}
       >
         {/* Subscriber Active Maintenance Banner */}
         {role === 'subscriber' && subscriberMaintenance?.maintenanceMode && (
@@ -924,11 +923,10 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
         )}
 
         <div
-          className={`mx-auto w-full max-w-7xl ${
-            role === 'technician' || role === 'subscriber'
+          className={`mx-auto w-full max-w-7xl ${role === 'technician' || role === 'subscriber'
               ? `px-0 lg:pb-0 ${isFixedMobilePage ? 'max-lg:h-full' : ''}`
               : 'px-4 py-5 sm:px-6 lg:px-8 lg:py-7'
-          }`}
+            }`}
         >
           {children}
         </div>

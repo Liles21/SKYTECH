@@ -856,9 +856,15 @@ main:has(table[class*="1050px"]) .mt-7.overflow-hidden>div:first-child {
   padding: 0 !important;
 }
 
-main:has(table[class*="1050px"]) .mt-7.overflow-hidden>div:last-child {
+main:has(table[class*="1050px"]) .mt-7.overflow-hidden>div:last-child,
+div.mt-7.overflow-hidden:has(table[class*="1050px"])>div:last-child,
+.subscriber-table-shell>div:last-child {
   margin-top: 1rem;
-  overflow: hidden;
+  overflow-x: auto !important;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  scrollbar-width: thin;
   border: 1px solid #e2e8f0;
   border-radius: 0.75rem;
   background: white;
@@ -875,12 +881,42 @@ div.mt-7.overflow-hidden:has(table[class*="1050px"])>div:first-child {
   padding: 0 !important;
 }
 
-div.mt-7.overflow-hidden:has(table[class*="1050px"])>div:last-child {
-  margin-top: 1rem;
-  overflow: hidden;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  background: white;
+.subscriber-table-shell>div:last-child::-webkit-scrollbar,
+main:has(table[class*="1050px"]) .mt-7.overflow-hidden>div:last-child::-webkit-scrollbar,
+div.mt-7.overflow-hidden:has(table[class*="1050px"])>div:last-child::-webkit-scrollbar {
+  height: 6px;
+}
+
+.subscriber-table-shell>div:last-child::-webkit-scrollbar-track,
+main:has(table[class*="1050px"]) .mt-7.overflow-hidden>div:last-child::-webkit-scrollbar-track,
+div.mt-7.overflow-hidden:has(table[class*="1050px"])>div:last-child::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 9999px;
+}
+
+.subscriber-table-shell>div:last-child::-webkit-scrollbar-thumb,
+main:has(table[class*="1050px"]) .mt-7.overflow-hidden>div:last-child::-webkit-scrollbar-thumb,
+div.mt-7.overflow-hidden:has(table[class*="1050px"])>div:last-child::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.subscriber-table-shell>div:last-child::-webkit-scrollbar-thumb:hover,
+main:has(table[class*="1050px"]) .mt-7.overflow-hidden>div:last-child::-webkit-scrollbar-thumb:hover,
+div.mt-7.overflow-hidden:has(table[class*="1050px"])>div:last-child::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+html.admin-dark-mode .subscriber-table-shell>div:last-child::-webkit-scrollbar-track,
+html.admin-dark-mode main:has(table[class*="1050px"]) .mt-7.overflow-hidden>div:last-child::-webkit-scrollbar-track,
+html.admin-dark-mode div.mt-7.overflow-hidden:has(table[class*="1050px"])>div:last-child::-webkit-scrollbar-track {
+  background: #111c31;
+}
+
+html.admin-dark-mode .subscriber-table-shell>div:last-child::-webkit-scrollbar-thumb,
+html.admin-dark-mode main:has(table[class*="1050px"]) .mt-7.overflow-hidden>div:last-child::-webkit-scrollbar-thumb,
+html.admin-dark-mode div.mt-7.overflow-hidden:has(table[class*="1050px"])>div:last-child::-webkit-scrollbar-thumb {
+  background: #334155;
 }
 
 .live-record-counter {

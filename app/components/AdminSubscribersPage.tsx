@@ -666,8 +666,11 @@ export function AdminSubscribersPage() {
         </div>
 
         {/* Table Content */}
-        <div className="overflow-x-auto">
-          <table className="min-w-[1050px] w-full text-left">
+        <div
+          className="overflow-x-auto touch-pan-x overscroll-x-contain"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          <table className="min-w-[1050px] w-full text-left whitespace-nowrap">
             <thead className="border-b border-slate-100 bg-white text-xs font-bold uppercase tracking-wide text-slate-400">
               <tr>
                 {[
@@ -679,7 +682,7 @@ export function AdminSubscribersPage() {
                   "Actions",
                 ].map((heading) => (
                   <th
-                    className={`px-5 py-4 ${heading === "Actions" ? "text-right" : ""}`}
+                    className={`px-5 py-4 whitespace-nowrap ${heading === "Actions" ? "text-right" : ""}`}
                     key={heading}
                   >
                     {heading}
@@ -717,8 +720,8 @@ export function AdminSubscribersPage() {
               ) : (
                 rows.map((subscriber) => (
                   <tr className="border-t border-slate-100 hover:bg-slate-50/50 transition-colors" key={subscriber.id}>
-                    <td className="px-5 py-4 font-mono text-slate-900">{subscriber.id}</td>
-                    <td className="px-5 py-4 font-semibold text-slate-900">
+                    <td className="px-5 py-4 font-mono text-slate-900 whitespace-nowrap">{subscriber.id}</td>
+                    <td className="px-5 py-4 font-semibold text-slate-900 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         {subscriber.image ? (
                           <img
@@ -734,9 +737,9 @@ export function AdminSubscribersPage() {
                         <span>{displayFirstAndLastName(subscriber.name)}</span>
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-slate-500">{subscriber.email}</td>
-                    <td className="px-5 py-4 text-slate-500">{subscriber.plan}</td>
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-4 text-slate-500 whitespace-nowrap">{subscriber.email}</td>
+                    <td className="px-5 py-4 text-slate-500 whitespace-nowrap">{subscriber.plan}</td>
+                    <td className="px-5 py-4 whitespace-nowrap">
                       <span
                         className={`admin-status-pill rounded-full px-2.5 py-1 text-xs font-bold tracking-wide ${subscriber.status === "Active"
                           ? "bg-emerald-50 text-emerald-500"
@@ -746,7 +749,7 @@ export function AdminSubscribersPage() {
                         {subscriber.status}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-right">
+                    <td className="px-5 py-4 text-right whitespace-nowrap">
                       {/* 3-Dots Action Menu */}
                       <div className="subscriber-action-menu-root relative inline-block text-left">
                         <button

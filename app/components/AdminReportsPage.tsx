@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Download } from 'lucide-react';
 import { PortalShell } from '@/app/components/PortalShell';
+import { PieChart } from '@/app/components/PieChart';
 
 type ReportData = {
   activeSubscribers: number;
@@ -132,36 +133,41 @@ export function AdminReportsPage() {
         </ChartCard>
 
         <ChartCard title="Billing Status" subtitle="Current bill mix">
-          <div className="mt-8 space-y-7">
-            {Object.entries(billStatus).map(([name, count]) => {
-              const label = name.charAt(0).toUpperCase() + name.slice(1);
-              const value = Number(count);
-              const percentage = totalStatus ? Math.round((value / totalStatus) * 100) : 0;
+          <div className="mt-6 flex flex-col items-center gap-6 sm:flex-row">
+            <PieChart
+              size={170}
+              slices={[
+                { label: 'Paid', value: Number(billStatus.paid), color: '#10b981' },
+                { label: 'Unpaid', value: Number(billStatus.unpaid), color: '#fbbf24' },
+                { label: 'Overdue', value: Number(billStatus.overdue), color: '#f43f5e' },
+              ]}
+            />
 
-              return (
-                <div key={name}>
-                  <div className="flex justify-between text-sm">
-                    <span className="font-medium text-slate-600">{label}</span>
-                    <span className="font-semibold text-slate-800">{value} bills</span>
-                  </div>
-                  <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-slate-100">
-                    <div
-                      className={
-                        totalStatus === 0
-                          ? 'bg-slate-200 h-full rounded-full'
-                          : value / totalStatus > 0.6
-                            ? 'bg-emerald-500 h-full rounded-full'
-                            : value / totalStatus > 0.3
-                              ? 'bg-blue-500 h-full rounded-full'
-                              : 'bg-amber-500 h-full rounded-full'
-                      }
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                  <div className="mt-1 text-right text-xs font-semibold text-slate-400">{percentage}%</div>
-                </div>
-              );
-            })}
+            <ul className="flex w-full min-w-0 flex-1 flex-col gap-2.5">
+              {[
+                { label: 'Paid', value: Number(billStatus.paid), dot: 'bg-emerald-500', text: 'text-emerald-500' },
+                { label: 'Unpaid', value: Number(billStatus.unpaid), dot: 'bg-amber-400', text: 'text-amber-500' },
+                { label: 'Overdue', value: Number(billStatus.overdue), dot: 'bg-rose-500', text: 'text-rose-500' },
+              ].map(({ label, value, dot, text }) => {
+                const percentage = totalStatus ? Math.round((value / totalStatus) * 100) : 0;
+
+                return (
+                  <li
+                    key={label}
+                    className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-2.5"
+                  >
+                    <span className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                      <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />
+                      {label}
+                    </span>
+                    <span className="flex items-baseline gap-2">
+                      <span className={`text-sm font-bold ${text}`}>{value} bills</span>
+                      <span className="text-xs font-semibold text-slate-400">{percentage}%</span>
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         </ChartCard>
       </div>

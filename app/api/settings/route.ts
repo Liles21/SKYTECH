@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { DEFAULT_PLANS, DEFAULT_SETTINGS, type PlanItem } from '@/app/lib/settings';
+import { recordAuditLog } from '@/app/lib/audit';
 
 export { DEFAULT_PLANS, DEFAULT_SETTINGS, type PlanItem };
 
@@ -79,6 +80,15 @@ export async function PUT(request: Request) {
       ...payload,
       id: 'singleton',
     };
+
+    void recordAuditLog({
+      action: 'SETTINGS_UPDATE',
+      entity: 'Settings',
+      entityId: 'singleton',
+      details: `Updated system settings: Company "${body.companyName}", late fee ${body.lateFeePercent ?? 0}%, ${plansToSave.length} fiber plans.`,
+      userName: 'Sky-Tech Admin',
+      userRole: 'admin',
+    });
 
     try {
       const data = await prisma.systemSettings.upsert({

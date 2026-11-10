@@ -20,6 +20,7 @@ import {
   MessageSquare,
   Moon,
   Settings,
+  ShieldCheck,
   Sun,
   Ticket,
   User,
@@ -119,6 +120,17 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
   useEffect(() => {
     setIsManageUsersOpen(isUserSectionActive);
   }, [isUserSectionActive, path]);
+
+  // Settings & Configurations dropdown in profile menu
+  const isSettingsSectionActive =
+    path.startsWith('/admin/settings') || path.startsWith('/admin/audit-logs');
+  const [isSettingsDropdownOpen, setIsSettingsDropdownOpen] = useState(isSettingsSectionActive);
+
+  useEffect(() => {
+    if (isSettingsSectionActive) {
+      setIsSettingsDropdownOpen(true);
+    }
+  }, [isSettingsSectionActive, path]);
 
   const { isDark: isDarkMode } = useTheme();
 
@@ -788,15 +800,76 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
 
                 {/* Role Specific Navigation Links */}
                 {role === 'admin' ? (
-                  <div className="space-y-0.5 py-1">
-                    <Link
-                      href="/admin/settings"
-                      onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition cursor-pointer"
+                  <div className="py-1">
+                    {/* Settings Dropdown Accordion Toggle Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsSettingsDropdownOpen((prev) => !prev);
+                      }}
+                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-150 cursor-pointer ${isSettingsSectionActive
+                          ? 'bg-blue-50/80 font-bold text-[#2563eb]'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                        }`}
                     >
-                      <Settings size={15} className="text-slate-400" />
-                      <span>Settings & Configurations</span>
-                    </Link>
+                      <div className="flex items-center gap-2.5">
+                        <Settings
+                          size={15}
+                          className={isSettingsSectionActive ? 'text-[#2563eb]' : 'text-slate-400'}
+                        />
+                        <span>Settings & Configurations</span>
+                      </div>
+                      <ChevronDown
+                        size={14}
+                        className={`text-slate-400 transition-transform duration-200 ${isSettingsDropdownOpen ? 'rotate-180 text-[#2563eb]' : ''
+                          }`}
+                      />
+                    </button>
+
+                    {/* Submenu Accordion Items */}
+                    <div
+                      className={`overflow-hidden transition-all duration-200 ${isSettingsDropdownOpen
+                          ? 'max-h-36 mt-1 opacity-100'
+                          : 'max-h-0 opacity-0 pointer-events-none'
+                        }`}
+                    >
+                      <div className="ml-3.5 space-y-0.5 border-l-2 border-slate-200/80 pl-2.5 py-0.5 profile-dropdown-submenu">
+                        <Link
+                          href="/admin/settings"
+                          onClick={() => setIsProfileOpen(false)}
+                          className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition-colors cursor-pointer ${path.startsWith('/admin/settings')
+                              ? 'bg-blue-50 font-bold text-[#2563eb]'
+                              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                            }`}
+                        >
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full transition-transform duration-150 ${path.startsWith('/admin/settings')
+                                ? 'bg-[#2563eb] scale-125'
+                                : 'bg-slate-400'
+                              }`}
+                          />
+                          <span>General Settings</span>
+                        </Link>
+
+                        <Link
+                          href="/admin/audit-logs"
+                          onClick={() => setIsProfileOpen(false)}
+                          className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition-colors cursor-pointer ${path.startsWith('/admin/audit-logs')
+                              ? 'bg-blue-50 font-bold text-[#2563eb]'
+                              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                            }`}
+                        >
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full transition-transform duration-150 ${path.startsWith('/admin/audit-logs')
+                                ? 'bg-[#2563eb] scale-125'
+                                : 'bg-slate-400'
+                              }`}
+                          />
+                          <span>Audit Logs</span>
+                        </Link>
+                      </div>
+                    </div>
                   </div>
                 ) : role === 'technician' ? (
                   <div className="space-y-0.5 py-1">
@@ -829,30 +902,6 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                     </Link>
                   </div>
                 )}
-
-                {/* Theme Switcher in Profile Menu */}
-                <div className="py-1 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setTheme(!isDarkMode)}
-                    className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      {isDarkMode ? (
-                        <Sun size={15} className="text-amber-400 shrink-0" />
-                      ) : (
-                        <Moon size={15} className="text-indigo-600 shrink-0" />
-                      )}
-                      <span>{isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}</span>
-                    </div>
-                    <span
-                      className={`inline-flex items-center rounded-lg px-2 py-0.5 text-[10px] font-bold ${isDarkMode ? 'bg-amber-400/20 text-amber-300' : 'bg-blue-50 text-blue-700'
-                        }`}
-                    >
-                      {isDarkMode ? 'Dark' : 'Light'}
-                    </span>
-                  </button>
-                </div>
 
                 <hr className="my-1 border-slate-100" />
 
@@ -897,8 +946,8 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
       {/* Main Content Area */}
       <main
         className={`${role === 'admin'
-            ? 'min-h-screen lg:ml-64 min-w-0 pt-16'
-            : `min-h-screen min-w-0 max-w-full overflow-x-hidden pb-20 lg:pb-0 lg:ml-64 pt-16 ${isFixedMobilePage ? 'max-lg:h-[100svh] max-lg:overflow-hidden max-lg:pb-0' : ''}`
+          ? 'min-h-screen lg:ml-64 min-w-0 pt-16'
+          : `min-h-screen min-w-0 max-w-full overflow-x-hidden pb-20 lg:pb-0 lg:ml-64 pt-16 ${isFixedMobilePage ? 'max-lg:h-[100svh] max-lg:overflow-hidden max-lg:pb-0' : ''}`
           }`}
       >
         {/* Subscriber Active Maintenance Banner */}
@@ -924,8 +973,8 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
 
         <div
           className={`mx-auto w-full max-w-7xl min-w-0 ${role === 'technician' || role === 'subscriber'
-              ? `px-0 lg:pb-0 ${isFixedMobilePage ? 'max-lg:h-full' : ''}`
-              : 'px-4 py-5 sm:px-6 lg:px-8 lg:py-7'
+            ? `px-0 lg:pb-0 ${isFixedMobilePage ? 'max-lg:h-full' : ''}`
+            : 'px-4 py-5 sm:px-6 lg:px-8 lg:py-7'
             }`}
         >
           {children}

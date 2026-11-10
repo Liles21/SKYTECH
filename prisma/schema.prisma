@@ -266,3 +266,21 @@ model PasswordResetToken {
   usedAt    DateTime?
   createdAt DateTime  @default(now())
 }
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String?
+  details   String
+  userId    String?
+  userName  String?
+  userRole  String?
+  ipAddress String?
+  status    String   @default("SUCCESS")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt(sort: Desc)])
+  @@index([entity])
+  @@index([action])
+}

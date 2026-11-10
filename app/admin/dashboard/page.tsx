@@ -16,6 +16,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { PortalShell } from '@/app/components/PortalShell';
+import { PieChart } from '@/app/components/PieChart';
 import { formatPersonName } from '@/app/lib/name';
 
 type DashboardResponse = {
@@ -833,41 +834,38 @@ export default function AdminDashboard() {
                 </span>
               </div>
 
-              <div className="mt-4 flex h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
-                {totalBillsCount > 0 && (
-                  <>
-                    <div
-                      className="h-full bg-emerald-500 transition-all duration-300"
-                      style={{ width: `${(billStatus.paid / totalBillsCount) * 100}%` }}
-                      title={`Paid: ${billStatus.paid}`}
-                    />
-                    <div
-                      className="h-full bg-amber-400 transition-all duration-300"
-                      style={{ width: `${(billStatus.unpaid / totalBillsCount) * 100}%` }}
-                      title={`Unpaid: ${billStatus.unpaid}`}
-                    />
-                    <div
-                      className="h-full bg-rose-500 transition-all duration-300"
-                      style={{ width: `${(billStatus.overdue / totalBillsCount) * 100}%` }}
-                      title={`Overdue: ${billStatus.overdue}`}
-                    />
-                  </>
-                )}
-              </div>
+              <div className="mt-4 flex items-center gap-5">
+                <PieChart
+                  slices={[
+                    { label: 'Paid', value: billStatus.paid, color: '#10b981' },
+                    { label: 'Unpaid', value: billStatus.unpaid, color: '#fbbf24' },
+                    { label: 'Overdue', value: billStatus.overdue, color: '#f43f5e' },
+                  ]}
+                />
 
-              <div className="mt-4 grid grid-cols-3 gap-2.5 text-center">
-                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5">
-                  <p className="text-lg font-extrabold text-emerald-500">{billStatus.paid}</p>
-                  <p className="text-[11px] font-semibold text-slate-400">Paid</p>
-                </div>
-                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5">
-                  <p className="text-lg font-extrabold text-amber-500">{billStatus.unpaid}</p>
-                  <p className="text-[11px] font-semibold text-slate-400">Unpaid</p>
-                </div>
-                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-2.5">
-                  <p className="text-lg font-extrabold text-rose-500">{billStatus.overdue}</p>
-                  <p className="text-[11px] font-semibold text-slate-400">Overdue</p>
-                </div>
+                <ul className="flex min-w-0 flex-1 flex-col gap-2">
+                  {[
+                    { label: 'Paid', value: billStatus.paid, dot: 'bg-emerald-500', text: 'text-emerald-500' },
+                    { label: 'Unpaid', value: billStatus.unpaid, dot: 'bg-amber-400', text: 'text-amber-500' },
+                    { label: 'Overdue', value: billStatus.overdue, dot: 'bg-rose-500', text: 'text-rose-500' },
+                  ].map(({ label, value, dot, text }) => (
+                    <li
+                      key={label}
+                      className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2"
+                    >
+                      <span className="flex items-center gap-2 text-[11px] font-semibold text-slate-500">
+                        <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />
+                        {label}
+                      </span>
+                      <span className="flex items-baseline gap-1.5">
+                        <span className={`text-sm font-extrabold ${text}`}>{value}</span>
+                        <span className="text-[10px] font-semibold text-slate-400">
+                          {totalBillsCount > 0 ? Math.round((value / totalBillsCount) * 100) : 0}%
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </section>
 

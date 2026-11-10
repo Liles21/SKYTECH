@@ -1,7 +1,8 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { Check, Edit3, LoaderCircle, Moon, Plus, Save, Sun, Trash2, X } from 'lucide-react';
+import Link from 'next/link';
+import { Check, Edit3, LoaderCircle, Moon, Plus, Save, ShieldCheck, Sun, Trash2, X } from 'lucide-react';
 import { PortalShell } from '@/app/components/PortalShell';
 import { DEFAULT_PLANS, DEFAULT_SETTINGS, PlanItem } from '@/app/lib/settings';
 import { useTheme } from '@/app/lib/theme';
@@ -146,10 +147,21 @@ export default function SettingsPage() {
   return (
     <PortalShell role="admin">
       <div className="max-w-6xl pb-12">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Settings</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Manage company information, billing rules, and internet plans displayed on the website.
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Settings</h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Manage company information, billing rules, and internet plans displayed on the website.
+            </p>
+          </div>
+          <Link
+            href="/admin/audit-logs"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 shadow-2xs hover:border-[#2563eb] hover:bg-blue-50/70 hover:text-[#2563eb] transition-all cursor-pointer"
+          >
+            <ShieldCheck size={16} className="text-[#2563eb]" />
+            <span>View Audit Logs</span>
+          </Link>
+        </div>
 
         {loading ? (
           <div className="mt-7 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
@@ -359,6 +371,30 @@ export default function SettingsPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </section>
+
+            {/* System Audit & Activity Logs */}
+            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xs">
+              <div className="flex flex-wrap items-center justify-between gap-4 p-6">
+                <div className="flex items-center gap-3.5">
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-50 text-[#2563eb]">
+                    <ShieldCheck size={22} />
+                  </div>
+                  <div>
+                    <h2 className="font-bold text-slate-900">System Audit & Activity Logs</h2>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      Track administrative operations, configuration changes, user logins, and database events.
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href="/admin/audit-logs"
+                  className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white hover:bg-slate-800 transition cursor-pointer"
+                >
+                  <span>Open Audit Logs</span>
+                  <span aria-hidden="true">&rarr;</span>
+                </Link>
               </div>
             </section>
 

@@ -1829,3 +1829,100 @@ html.admin-dark-mode .portal-shell .dashboard-zero-bar {
 }
 
 
+
+/* Dark mode: hover states for light hover backgrounds outside the sidebar
+   (header bell, profile button, dropdown menus, etc.) */
+.admin-dark-mode .portal-shell [class*="hover:bg-slate-100"]:hover,
+.admin-dark-mode .portal-shell [class*="hover:bg-slate-200"]:hover,
+.admin-dark-mode .portal-shell [class*="hover:bg-gray-50"]:hover,
+.admin-dark-mode .portal-shell [class*="hover:bg-gray-100"]:hover,
+.admin-dark-mode .portal-shell [class*="hover:bg-white"]:hover,
+.portal-shell.admin-dark-mode [class*="hover:bg-slate-100"]:hover,
+.portal-shell.admin-dark-mode [class*="hover:bg-slate-200"]:hover,
+.portal-shell.admin-dark-mode [class*="hover:bg-gray-50"]:hover,
+.portal-shell.admin-dark-mode [class*="hover:bg-gray-100"]:hover,
+.portal-shell.admin-dark-mode [class*="hover:bg-white"]:hover {
+  background-color: #111c31 !important;
+}
+
+.admin-dark-mode .portal-shell [class*="hover:bg-blue-50"]:hover,
+.portal-shell.admin-dark-mode [class*="hover:bg-blue-50"]:hover {
+  background-color: #1d3150 !important;
+}
+
+.admin-dark-mode .portal-shell [class*="hover:bg-rose-50"]:hover,
+.admin-dark-mode .portal-shell [class*="hover:bg-red-50"]:hover,
+.portal-shell.admin-dark-mode [class*="hover:bg-rose-50"]:hover,
+.portal-shell.admin-dark-mode [class*="hover:bg-red-50"]:hover {
+  background-color: #3a1e2a !important;
+}
+
+.admin-dark-mode .portal-shell [class*="hover:text-slate-900"]:hover,
+.admin-dark-mode .portal-shell [class*="hover:text-slate-700"]:hover,
+.portal-shell.admin-dark-mode [class*="hover:text-slate-900"]:hover,
+.portal-shell.admin-dark-mode [class*="hover:text-slate-700"]:hover {
+  color: #f1f5f9 !important;
+}
+
+.admin-dark-mode .portal-shell [class*="hover:text-blue-700"]:hover,
+.portal-shell.admin-dark-mode [class*="hover:text-blue-700"]:hover {
+  color: #93c5fd !important;
+}
+
+/* Dark mode: rose / red tinted surfaces (e.g. Maintenance Mode active card) */
+.admin-dark-mode .portal-shell .bg-rose-50,
+.admin-dark-mode .portal-shell .bg-rose-50\/50,
+.admin-dark-mode .portal-shell .bg-rose-50\/60,
+.admin-dark-mode .portal-shell .bg-rose-50\/70,
+.admin-dark-mode .portal-shell .bg-rose-50\/80,
+.admin-dark-mode .portal-shell .bg-red-50\/50,
+.admin-dark-mode .portal-shell .bg-red-50\/70,
+.portal-shell.admin-dark-mode .bg-rose-50,
+.portal-shell.admin-dark-mode .bg-rose-50\/50,
+.portal-shell.admin-dark-mode .bg-rose-50\/60,
+.portal-shell.admin-dark-mode .bg-rose-50\/70,
+.portal-shell.admin-dark-mode .bg-rose-50\/80,
+.portal-shell.admin-dark-mode .bg-red-50\/50,
+.portal-shell.admin-dark-mode .bg-red-50\/70 {
+  background-color: #2a1a2b !important;
+}
+
+.admin-dark-mode .portal-shell .bg-rose-100,
+.admin-dark-mode .portal-shell .bg-rose-200,
+.admin-dark-mode .portal-shell .bg-red-100,
+.admin-dark-mode .portal-shell .bg-red-200,
+.portal-shell.admin-dark-mode .bg-rose-100,
+.portal-shell.admin-dark-mode .bg-rose-200,
+.portal-shell.admin-dark-mode .bg-red-100,
+.portal-shell.admin-dark-mode .bg-red-200 {
+  background-color: #4c1d2e !important;
+}
+
+.admin-dark-mode .portal-shell .border-rose-100,
+.admin-dark-mode .portal-shell .border-rose-200,
+.admin-dark-mode .portal-shell .border-rose-300,
+.portal-shell.admin-dark-mode .border-rose-100,
+.portal-shell.admin-dark-mode .border-rose-200,
+.portal-shell.admin-dark-mode .border-rose-300 {
+  border-color: #7f303d !important;
+}
+
+.admin-dark-mode .portal-shell .ring-rose-200,
+.admin-dark-mode .portal-shell .ring-rose-300,
+.portal-shell.admin-dark-mode .ring-rose-200,
+.portal-shell.admin-dark-mode .ring-rose-300 {
+  --tw-ring-color: #9f3a4d !important;
+}
+
+.admin-dark-mode .portal-shell .text-rose-950,
+.admin-dark-mode .portal-shell .text-rose-900,
+.admin-dark-mode .portal-shell .text-rose-800,
+.admin-dark-mode .portal-shell .text-red-900,
+.admin-dark-mode .portal-shell .text-red-800,
+.portal-shell.admin-dark-mode .text-rose-950,
+.portal-shell.admin-dark-mode .text-rose-900,
+.portal-shell.admin-dark-mode .text-rose-800,
+.portal-shell.admin-dark-mode .text-red-900,
+.portal-shell.admin-dark-mode .text-red-800 {
+  color: #fecdd3 !important;
+}

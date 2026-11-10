@@ -44,8 +44,6 @@ export function PieChart({ slices, size = 120 }: { slices: PieSlice[]; size?: nu
               key={slice.label}
               d={d}
               fill={slice.color}
-              stroke="#ffffff"
-              strokeWidth={2}
               className="transition-opacity duration-200 hover:opacity-80"
             >
               <title>{title}</title>

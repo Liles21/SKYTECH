@@ -581,42 +581,51 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
 
       {/* -------------------- TOP NAVBAR HEADER -------------------- */}
       <header
-        className="fixed right-0 top-0 left-0 lg:left-64 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 sm:px-8 backdrop-blur-md transition-all"
+        className="fixed right-0 top-0 left-0 lg:left-64 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-3 sm:px-6 lg:px-8 backdrop-blur-md transition-all"
       >
         {/* Left Section: Mobile Menu Toggle & Portal Branding */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 mr-2">
           <button
             type="button"
             onClick={() => setIsOpen((prev) => !prev)}
-            className="lg:hidden rounded-xl p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition cursor-pointer"
+            className="lg:hidden rounded-xl p-1.5 sm:p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition cursor-pointer shrink-0"
             aria-label="Toggle navigation menu"
           >
             <Menu size={20} />
           </button>
 
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
             <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="truncate text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
-              {role === 'admin'
-                ? 'Sky-Tech Admin Console'
-                : role === 'technician'
-                  ? 'Field Technician Portal'
-                  : 'Sky-Tech Subscriber Portal'}
+            <span className="truncate text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
+              <span className="hidden sm:inline">
+                {role === 'admin'
+                  ? 'Sky-Tech Admin Console'
+                  : role === 'technician'
+                    ? 'Field Technician Portal'
+                    : 'Sky-Tech Subscriber Portal'}
+              </span>
+              <span className="sm:hidden">
+                {role === 'admin'
+                  ? 'Admin Console'
+                  : role === 'technician'
+                    ? 'Field Technician'
+                    : 'Subscriber'}
+              </span>
             </span>
           </div>
         </div>
 
         {/* Right Section: Actions & Profile Icon Dropdown */}
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-1 sm:gap-2.5 md:gap-3.5 shrink-0">
           {/* Admin Notifications Popover */}
           {role === 'admin' && (
-            <div ref={notificationContainerRef} className="relative">
+            <div ref={notificationContainerRef} className="relative shrink-0">
               <button
                 type="button"
                 aria-label="Notifications"
                 aria-expanded={isNotificationsOpen}
                 onClick={toggleNotifications}
-                className="relative rounded-xl p-2.5 text-slate-500 transition-all duration-150 hover:bg-slate-100 active:scale-95 group cursor-pointer"
+                className="relative rounded-xl p-2 sm:p-2.5 text-slate-500 transition-all duration-150 hover:bg-slate-100 active:scale-95 group cursor-pointer"
               >
                 <Bell size={20} className="transition-transform group-hover:rotate-12 text-slate-600" />
                 {unreadNotificationCount > 0 && (
@@ -723,7 +732,7 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
             onClick={() => setTheme(!isDarkMode)}
             title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             aria-label={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="relative rounded-xl p-2.5 text-slate-500 transition-all duration-150 hover:bg-slate-100 active:scale-95 group cursor-pointer"
+            className="relative rounded-xl p-2 sm:p-2.5 text-slate-500 transition-all duration-150 hover:bg-slate-100 active:scale-95 group cursor-pointer shrink-0"
           >
             {isDarkMode ? (
               <Sun size={19} className="text-amber-400 transition-transform group-hover:rotate-45" />
@@ -733,7 +742,7 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
           </button>
 
           {/* ----------------- PROFILE ICON DROPDOWN ----------------- */}
-          <div ref={topProfileRef} className="relative">
+          <div ref={topProfileRef} className="relative shrink-0">
             <button
               type="button"
               aria-label="Open profile account menu"
@@ -745,7 +754,7 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                   return next;
                 });
               }}
-              className="flex items-center gap-2.5 rounded-2xl p-1.5 pr-2.5 hover:bg-slate-100/90 transition-all duration-200 cursor-pointer group active:scale-[0.98]"
+              className="flex items-center gap-1.5 sm:gap-2.5 rounded-2xl p-1 sm:p-1.5 sm:pr-2.5 hover:bg-slate-100/90 transition-all duration-200 cursor-pointer group active:scale-[0.98]"
             >
               {/* Profile Avatar Icon with Online Status */}
               <div className="relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-tr from-[#1b43b4] to-[#0284c7] text-xs font-black text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform duration-200 overflow-hidden">
@@ -785,7 +794,7 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
 
             {/* Dropdown Menu Modal */}
             {isProfileOpen && (
-              <div className="absolute right-0 top-12 z-50 w-64 rounded-2xl border border-slate-200/90 bg-white p-2 shadow-[0_16px_36px_rgba(15,23,42,0.14)] backdrop-blur-md animate-in fade-in zoom-in-95 duration-150">
+              <div className="absolute right-0 top-12 z-50 w-64 max-w-[calc(100vw-1.5rem)] rounded-2xl border border-slate-200/90 bg-white p-2 shadow-[0_16px_36px_rgba(15,23,42,0.14)] backdrop-blur-md animate-in fade-in zoom-in-95 duration-150">
                 {/* User Header Summary */}
                 <div className="flex items-center gap-3 p-3 border-b border-slate-100 bg-slate-50/70 rounded-xl mb-1">
                   <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-tr from-[#1b43b4] to-[#0284c7] text-sm font-black text-white shrink-0 shadow-sm overflow-hidden">

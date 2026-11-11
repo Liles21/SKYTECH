@@ -3,7 +3,6 @@ import { prisma } from '@/app/lib/prisma';
 import { DEFAULT_PLANS, DEFAULT_SETTINGS, type PlanItem } from '@/app/lib/settings';
 import { recordAuditLog } from '@/app/lib/audit';
 
-export { DEFAULT_PLANS, DEFAULT_SETTINGS, type PlanItem };
 
 let cachedSettings = { ...DEFAULT_SETTINGS };
 

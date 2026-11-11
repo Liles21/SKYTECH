@@ -717,6 +717,21 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
           )}
 
 
+          {/* Quick Theme Toggle (Light / Dark) */}
+          <button
+            type="button"
+            onClick={() => setTheme(!isDarkMode)}
+            title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            aria-label={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            className="relative rounded-xl p-2.5 text-slate-500 transition-all duration-150 hover:bg-slate-100 active:scale-95 group cursor-pointer"
+          >
+            {isDarkMode ? (
+              <Sun size={19} className="text-amber-400 transition-transform group-hover:rotate-45" />
+            ) : (
+              <Moon size={19} className="text-slate-600 transition-transform group-hover:-rotate-12" />
+            )}
+          </button>
+
           {/* ----------------- PROFILE ICON DROPDOWN ----------------- */}
           <div ref={topProfileRef} className="relative">
             <button
@@ -902,6 +917,31 @@ export function PortalShell({ role, children }: { role: Role; children: React.Re
                     </Link>
                   </div>
                 )}
+
+                {/* Theme Switcher in Profile Menu */}
+                <div className="py-1 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setTheme(!isDarkMode)}
+                    className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      {isDarkMode ? (
+                        <Sun size={15} className="text-amber-400 shrink-0" />
+                      ) : (
+                        <Moon size={15} className="text-indigo-600 shrink-0" />
+                      )}
+                      <span>{isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}</span>
+                    </div>
+                    <span
+                      className={`inline-flex items-center rounded-lg px-2 py-0.5 text-[10px] font-bold ${
+                        isDarkMode ? 'bg-amber-400/20 text-amber-300' : 'bg-blue-50 text-blue-700'
+                      }`}
+                    >
+                      {isDarkMode ? 'Dark' : 'Light'}
+                    </span>
+                  </button>
+                </div>
 
                 <hr className="my-1 border-slate-100" />
 

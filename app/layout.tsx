@@ -31,7 +31,11 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                if (localStorage.getItem('skytech-admin-theme') === 'dark') {
+                if (localStorage.getItem('skytech-admin-theme-v2') !== '1') {
+                  localStorage.setItem('skytech-admin-theme', 'light');
+                  localStorage.setItem('skytech-admin-theme-v2', '1');
+                  document.documentElement.classList.remove('admin-dark-mode');
+                } else if (localStorage.getItem('skytech-admin-theme') === 'dark') {
                   document.documentElement.classList.add('admin-dark-mode');
                 } else {
                   document.documentElement.classList.remove('admin-dark-mode');

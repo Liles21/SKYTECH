@@ -14,6 +14,12 @@ export const subscribeToTheme = (listener: () => void) => {
 
 export const getThemeSnapshot = (): boolean => {
   if (typeof window === 'undefined') return false;
+  if (window.localStorage.getItem('skytech-admin-theme-v2') !== '1') {
+    window.localStorage.setItem(STORAGE_KEY, 'light');
+    window.localStorage.setItem('skytech-admin-theme-v2', '1');
+    document.documentElement.classList.remove('admin-dark-mode');
+    return false;
+  }
   return window.localStorage.getItem(STORAGE_KEY) === 'dark';
 };
 
